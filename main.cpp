@@ -35,7 +35,13 @@ int main()
         fire.printFrame();
         fire.decayStep();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(42));
+        if (GetAsyncKeyState('Q') & 0x8000)
+        {
+            fire.openConfig();
+        }
+
+        fire.wait();
+
     }
     return 0;
 }
