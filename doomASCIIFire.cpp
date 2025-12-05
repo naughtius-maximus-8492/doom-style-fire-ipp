@@ -14,11 +14,10 @@ void doomASCIIFire::decayStep()
         ippsCopy_16s(rowBelow, row, frameBufferWidth);
 
         // Generate random distribution
-        Ipp16s* randomRow = ippsMalloc_16s(this->frameBufferWidth);
-        ippsRandUniform_16s(randomRow, this->frameBufferWidth, randState);
+        ippsRandUniform_16s(this->randomRow, this->frameBufferWidth, randState);
 
         // subtract random distribution buffer from copied row to simulate fire decay
-        ippsSub_16s_I(randomRow, row, this->frameBufferWidth);
+        ippsSub_16s_I(this->randomRow, row, this->frameBufferWidth);
         ippsThreshold_LT_16s_I(row, this->frameBufferWidth, 0);
     }
 }
@@ -98,6 +97,7 @@ doomASCIIFire::doomASCIIFire()
     , frameBufferHeight(96)
     , frameBufferSize(frameBufferWidth * frameBufferHeight)
     , frameBuffer { ippsMalloc_16s(this->frameBufferSize) }
+    , randomRow { ippsMalloc_16s(this->frameBufferWidth) }
 {
     ippsSet_16s(0, this->frameBuffer, this->frameBufferSize);
     Ipp16s* lastRow = this->frameBuffer + (this->frameBufferSize - this->frameBufferWidth);

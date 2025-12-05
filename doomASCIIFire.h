@@ -14,9 +14,9 @@ private:
      int frameBufferHeight;
      int frameBufferSize;
 
+     // Random related members
      Ipp16s* frameBuffer;
-
-     // Random related functions
+     Ipp16s* randomRow;
      IppsRandUniState_16s* randState;
 
      char intensityToChar(int intensity);
