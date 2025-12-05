@@ -19,7 +19,7 @@ private:
      IppsRandUniState_16s* randState;
 
      std::string intensityToColour(int intensity);
-     int interpolate(float value, float min, float max);
+     float interpolate(float value, float min, float max);
 
 public:
      doomASCIIFire();

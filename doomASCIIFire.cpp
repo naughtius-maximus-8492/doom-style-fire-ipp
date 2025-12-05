@@ -99,7 +99,7 @@ std::string doomASCIIFire::intensityToColour(int intensity)
 
 }
 
-int doomASCIIFire::interpolate(float value, float min, float max)
+float doomASCIIFire::interpolate(float value, float min, float max)
 {
     float interpolated = (value - min) / (max - min);
 
