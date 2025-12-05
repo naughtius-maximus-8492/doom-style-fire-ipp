@@ -24,8 +24,11 @@ private:
      float interpolate(float value, float min, float max);
 
 public:
-     doomASCIIFire();
+     doomASCIIFire(int width, int height);
+     ~doomASCIIFire();
 
      void printFrame();
      void decayStep();
+     void printConfig();
+
 };

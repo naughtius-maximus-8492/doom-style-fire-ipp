@@ -9,8 +9,8 @@ void doomASCIIFire::decayStep()
     // copy frames upwards
     for (int i = 0; i < frameBufferHeight - 1; ++i)
     {
-        Ipp16s* row = frameBuffer + (i * frameBufferWidth);
-        Ipp16s* rowBelow = frameBuffer + (i * frameBufferWidth) + frameBufferWidth;
+        Ipp16s* row = &frameBuffer[i * frameBufferWidth];
+        Ipp16s* rowBelow = &frameBuffer[i * frameBufferWidth + frameBufferWidth];
         ippsCopy_16s(rowBelow, row, frameBufferWidth);
 
         // Generate random distribution
@@ -20,6 +20,13 @@ void doomASCIIFire::decayStep()
         ippsSub_16s_I(this->randomRow, row, this->frameBufferWidth);
         ippsThreshold_LT_16s_I(row, this->frameBufferWidth, 0);
     }
+}
+
+void doomASCIIFire::printConfig()
+{
+    std::cout << "ASCII Fire Configuration"
+            << "1) Set characters to use"
+            << "2) Modify colour intensities";
 }
 
 void doomASCIIFire::printFrame()
@@ -92,19 +99,26 @@ float doomASCIIFire::interpolate(float value, float min, float max)
     return std::clamp(interpolated, 0.0F, 1.0F);
 }
 
-doomASCIIFire::doomASCIIFire()
-    : frameBufferWidth(256)
-    , frameBufferHeight(96)
+doomASCIIFire::doomASCIIFire(int width, int height)
+    : frameBufferWidth(width)
+    , frameBufferHeight(height)
     , frameBufferSize(frameBufferWidth * frameBufferHeight)
     , frameBuffer { ippsMalloc_16s(this->frameBufferSize) }
     , randomRow { ippsMalloc_16s(this->frameBufferWidth) }
 {
     ippsSet_16s(0, this->frameBuffer, this->frameBufferSize);
-    Ipp16s* lastRow = this->frameBuffer + (this->frameBufferSize - this->frameBufferWidth);
+    Ipp16s* lastRow = &this->frameBuffer[this->frameBufferSize - this->frameBufferWidth];
     ippsSet_16s(maxIntensity, lastRow, this->frameBufferWidth);
 
     int randStateSize = 0;
     ippsRandUniformGetSize_16s(&randStateSize);
     randState = reinterpret_cast<IppsRandUniState_16s *>(ippsMalloc_8u(randStateSize));
     ippsRandUniformInit_16s(randState, 0, 9, 789132);
+}
+
+doomASCIIFire::~doomASCIIFire()
+{
+    ippsFree(this->frameBuffer);
+    ippsFree(this->randomRow);
+    ippsFree(this->randState);
 }
