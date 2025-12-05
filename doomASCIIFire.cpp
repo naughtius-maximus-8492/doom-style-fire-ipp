@@ -34,28 +34,29 @@ void doomASCIIFire::printFrame()
     {
         for (int j = 0; j < this->frameBufferWidth; ++j)
         {
-            std::string intensity = std::to_string(this->frameBuffer[pos++]);
+            short intensity = this->frameBuffer[pos++];
 
             std::string character = "0";
 
-            if (this->frameBuffer[pos] == 0)
+            if (intensity == 0)
             {
                 character = " ";
             }
-            else if (this->frameBuffer[pos] < 25)
+            else if (intensity < 25)
             {
                 character = ".";
             }
-            else if (this->frameBuffer[pos] < 150)
+            else if (intensity < 150)
             {
                 character = "o";
             }
-            else if (this->frameBuffer[pos] < 200)
+            else if (intensity < 200)
             {
                 character = "O";
             }
 
-            std::string colouredCharacter = "\033[38;5;" + intensity + "m" + character + "\033[0m";
+            // std::string colouredCharacter = "\033[38;5;100m" + character + "\033[0m";
+            std::string colouredCharacter = "\033[38;2;" + this->intensityToColour(intensity) + "m" + character + "\033[0m";
             frame += colouredCharacter;
         }
 
@@ -68,6 +69,43 @@ void doomASCIIFire::printFrame()
     std::cout << frame;
 }
 
+std::string doomASCIIFire::intensityToColour(int intensity)
+{
+    int red = 254;
+    int green = 254;
+    int blue = 254;
+
+    // work out percentage to absolute zero
+    float percentage = static_cast<float>(intensity) / static_cast<float>(maxIntensity);
+
+    if (percentage >= 0.66)
+    {
+        blue = maxIntensity * this->interpolate(percentage, 0.66, 1.0);
+    }
+    else if (percentage >= 0.33)
+    {
+        blue = 0;
+        green = maxIntensity * this->interpolate(percentage, 0.33, 0.66) ;
+    }
+    else
+    {
+        blue = 0;
+        green = 0;
+        red = maxIntensity * this->interpolate(percentage, 0.0, 0.33);
+    }
+
+    std::string colorCode = std::to_string(red) + ";" + std::to_string(green) + ";" + std::to_string(blue);
+    return colorCode;
+
+}
+
+int doomASCIIFire::interpolate(float value, float min, float max)
+{
+    float interpolated = (value - min) / (max - min);
+
+    return std::clamp(interpolated, 0.0F, 1.0F);
+}
+
 doomASCIIFire::doomASCIIFire()
     : frameBufferWidth(256)
     , frameBufferHeight(96)
@@ -76,7 +114,7 @@ doomASCIIFire::doomASCIIFire()
 {
     ippsSet_16s(0, this->frameBuffer, this->frameBufferSize);
     Ipp16s* lastRow = this->frameBuffer + (this->frameBufferSize - this->frameBufferWidth);
-    ippsSet_16s(254, lastRow, this->frameBufferWidth);
+    ippsSet_16s(maxIntensity, lastRow, this->frameBufferWidth);
 
     int randStateSize = 0;
     ippsRandUniformGetSize_16s(&randStateSize);

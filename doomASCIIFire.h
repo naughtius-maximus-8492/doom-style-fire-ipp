@@ -2,6 +2,9 @@
 
 #include <ipp.h>
 #include <string>
+#include <algorithm>
+
+constexpr unsigned int maxIntensity = 254;
 
 class doomASCIIFire
 {
@@ -15,6 +18,8 @@ private:
      // Random related functions
      IppsRandUniState_16s* randState;
 
+     std::string intensityToColour(int intensity);
+     int interpolate(float value, float min, float max);
 
 public:
      doomASCIIFire();

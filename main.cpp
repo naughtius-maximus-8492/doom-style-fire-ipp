@@ -6,7 +6,11 @@
 
 int main()
 {
-    std::cout << "\033[38;5;128m0Oo.\033[0m\n";
+    int R = 254;
+    int G = 128;
+    int B = 0;
+    std::cout << "\033[38;2;" << R << ";" << G << ";" << B << "m0\033[0m\n";
+
 
     doomASCIIFire fire{};
 
