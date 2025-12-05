@@ -13,15 +13,13 @@ void doomASCIIFire::decayStep()
         Ipp16s* rowBelow = frameBuffer + (i * frameBufferWidth) + frameBufferWidth;
         ippsCopy_16s(rowBelow, row, frameBufferWidth);
 
-        // Generate random distribution to subtract from copied row
+        // Generate random distribution
         Ipp16s* randomRow = ippsMalloc_16s(this->frameBufferWidth);
-
-
         ippsRandUniform_16s(randomRow, this->frameBufferWidth, randState);
 
+        // subtract random distribution buffer from copied row to simulate fire decay
         ippsSub_16s_I(randomRow, row, this->frameBufferWidth);
         ippsThreshold_LT_16s_I(row, this->frameBufferWidth, 0);
-
     }
 }
 
@@ -36,24 +34,7 @@ void doomASCIIFire::printFrame()
         {
             short intensity = this->frameBuffer[pos++];
 
-            std::string character = "0";
-
-            if (intensity == 0)
-            {
-                character = " ";
-            }
-            else if (intensity < 25)
-            {
-                character = ".";
-            }
-            else if (intensity < 150)
-            {
-                character = "o";
-            }
-            else if (intensity < 200)
-            {
-                character = "O";
-            }
+            char character = this->intensityToChar(intensity);
 
             // std::string colouredCharacter = "\033[38;5;100m" + character + "\033[0m";
             std::string colouredCharacter = "\033[38;2;" + this->intensityToColour(intensity) + "m" + character + "\033[0m";
@@ -67,6 +48,12 @@ void doomASCIIFire::printFrame()
     }
 
     std::cout << frame;
+}
+
+char doomASCIIFire::intensityToChar(int intensity)
+{
+    int index = intensity * (this->characters.size() - 1) / maxIntensity;
+    return this->characters[index];
 }
 
 std::string doomASCIIFire::intensityToColour(int intensity)
