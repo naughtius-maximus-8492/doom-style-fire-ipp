@@ -51,6 +51,7 @@ public:
      ~doomASCIIFire();
 
      std::string getFrame() const;
+     std::string getCharacter(int intensity, char character) const;
      void decayStep() const;
 
      void openConfig();

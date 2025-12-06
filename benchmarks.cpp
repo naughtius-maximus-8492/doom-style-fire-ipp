@@ -6,7 +6,7 @@
 TEST_CASE("Secret Entrance One")
 {
     std::array<int, 8> sizes = {64, 128, 256, 512, 1024, 2048, 4096, 8192};
-    for (int size : sizes)
+    for (const int size : sizes)
     {
         const doomASCIIFire fire(size, size);
         BENCHMARK("Decay Step" + std::to_string(size) + "x" + std::to_string(size))

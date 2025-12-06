@@ -87,6 +87,7 @@ void doomASCIIFire::updateDecayRate(int decayRate) const
 
 std::string doomASCIIFire::getFrame() const
 {
+    std::string* fullFrame = nullptr;
     std::string frame;
     size_t stringSize = frameBufferSize * maxCharacterSize;
     frame.reserve(stringSize);
@@ -96,19 +97,7 @@ std::string doomASCIIFire::getFrame() const
     for (int i = 0; i < frameBufferSize; ++i)
     {
         const short intensity = this->frameBufferStart[i];
-        char character;
-        std::string colouredCharacter;
-
-        if (backgroundMode)
-        {
-            character = ' ';
-            colouredCharacter = "\033[48;2;" + this->intensityToColour(intensity) + "m" + character + "\033[0m";
-        }
-        else
-        {
-            character = this->intensityToChar(intensity);
-            colouredCharacter = "\033[38;2;" + this->intensityToColour(intensity) + ";48;2;" + this->intensityToColour(intensity*0.1) + "m" + character + "\033[0m";
-        }
+        std::string colouredCharacter = this->getCharacter(intensity, this->characters[0]);
         frame.append(colouredCharacter);
 
         if (i % frameBufferWidth == 0)
@@ -119,6 +108,23 @@ std::string doomASCIIFire::getFrame() const
 
     frame.shrink_to_fit();
     return frame;
+}
+
+std::string doomASCIIFire::getCharacter(int intensity, char character) const
+{
+    std::string colouredCharacter;
+
+    const std::string rgbVal = intensityToColour(intensity);
+
+    if (backgroundMode)
+    {
+        character = ' ';
+        colouredCharacter = "\033[48;2;" + rgbVal + "m" + character + "\033[0m";
+    }
+    else
+    {
+        colouredCharacter = "\033[38;2;" + rgbVal + ";48;2;" + this->intensityToColour(intensity * 0.1) + "m" + character + "\033[0m";
+    }
 }
 
 char doomASCIIFire::intensityToChar(const int intensity) const
