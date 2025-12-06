@@ -126,8 +126,7 @@ std::string doomASCIIFire::getCharacter(const int intensity) const
     const std::string rgbVal = intensityToColour(intensity);
     const std::string rgbValBackground = intensityToColour(intensity * backgroundMultiplier);
 
-    std::string colouredCharacter = "\033[38;2;" + rgbVal + ";48;2;" +
-        this->intensityToColour(intensity * backgroundMultiplier) + "m" + character + "\033[0m";
+    std::string colouredCharacter = "\033[38;2;" + rgbVal + ";48;2;" + rgbValBackground + "m" + character + "\033[0m";
 
     return colouredCharacter;
 }
@@ -140,7 +139,7 @@ char doomASCIIFire::intensityToChar(const int intensity) const
 
 std::string doomASCIIFire::intensityToColour(const int intensity) const
 {
-    const unsigned short maxColourVal = 254;
+    constexpr unsigned short maxColourVal = 254;
     int red = maxColourVal;
     int green = maxColourVal;
     int blue {};
@@ -148,8 +147,8 @@ std::string doomASCIIFire::intensityToColour(const int intensity) const
     // work out percentage to absolute zero
     const float percentage = static_cast<float>(intensity) / static_cast<float>(maxIntensity);
 
-    const float colourBandOne = 0.80 * colour_band_multiplier;
-    const float colourBandTwo = 0.40 * colour_band_multiplier;
+    const float colourBandOne = 0.8 * colour_band_multiplier;
+    const float colourBandTwo = 0.2 * colour_band_multiplier;
 
     if (percentage >= colourBandOne) // white to yellow
     {
@@ -177,7 +176,7 @@ float doomASCIIFire::normalise(const float value, const float min, const float m
 }
 
 doomASCIIFire::doomASCIIFire(const int width, const int height)
-    : characters { " .:|O000##" }
+    : characters { " .:*o|O0%&@#" }
     , frameBufferWidth(width)
     , frameBufferHeight(height)
     , frameBufferSize(width * height)

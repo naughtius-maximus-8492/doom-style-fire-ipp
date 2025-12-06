@@ -14,10 +14,10 @@ constexpr unsigned int maxIntensity = 762;
 
 constexpr int defaultLowBoundUniform = 0;
 constexpr int defaultUpperBoundUniform = 50;
-constexpr int defaultMeanGauss = -9;
-constexpr int defaultStandardDeviationGauss = 25;
+constexpr int defaultMeanGauss = -6;
+constexpr int defaultStandardDeviationGauss = 16;
 
-constexpr unsigned int defaultDelay = 33;
+constexpr unsigned int defaultDelay = 42;
 constexpr unsigned int maxCharacterSize = 52;
 
 constexpr int flicker = 3;

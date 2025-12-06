@@ -49,31 +49,31 @@ int main()
         {
             fire.openConfig();
         }
-        if (GetAsyncKeyState(VK_UP) & 0x8000 && decayRate < 1000)
+        if (GetAsyncKeyState(VK_UP) & 0x8000)
         {
-            decayRate -= 0.25;
+            decayRate -= 0.75;
             fire.updateDecayRate(decayRate);
         }
-        if (GetAsyncKeyState(VK_DOWN) & 0x8000 && decayRate > 0)
+        if (GetAsyncKeyState(VK_DOWN) & 0x8000)
         {
-            decayRate += 0.25;
+            decayRate += 0.75;
             fire.updateDecayRate(decayRate);
         }
-        if (GetAsyncKeyState(VK_LEFT) & 0x8000 && colourBandMultiplier >= 0)
-        {
-            colourBandMultiplier -= 0.02;
-            fire.colour_band_multiplier = colourBandMultiplier;
-        }
-        if (GetAsyncKeyState(VK_RIGHT) & 0x8000 && colourBandMultiplier <= 1.5)
+        if (GetAsyncKeyState(VK_LEFT) & 0x8000 && colourBandMultiplier)
         {
             colourBandMultiplier += 0.02;
-            fire.colour_band_multiplier = colourBandMultiplier;
+        }
+        if (GetAsyncKeyState(VK_RIGHT) & 0x8000 && colourBandMultiplier)
+        {
+            colourBandMultiplier -= 0.02;
         }
         if (GetAsyncKeyState('F') & 0x8000)
         {
             fire.backgroundMode =  !fire.backgroundMode;
             Sleep(100);
         }
+
+        fire.colour_band_multiplier = colourBandMultiplier;
 
         while (std::chrono::steady_clock::now() - last < std::chrono::milliseconds(fire.frameDelay))
         {
