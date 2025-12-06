@@ -8,6 +8,7 @@
 #include <Windows.h>
 #include <random>
 
+constexpr unsigned int minIntensity = 0;
 constexpr unsigned int maxIntensity = 254;
 
 class doomASCIIFire

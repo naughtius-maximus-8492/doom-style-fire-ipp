@@ -2,22 +2,34 @@
 
 void doomASCIIFire::decayStep() const
 {
+    std::mt19937 rng(std::random_device{}());
     // copy frames upwards
     for (int i = 0; i < frameBufferHeight - 1; ++i)
     {
         Ipp16s* row = &frameBuffer[i * frameBufferWidth];
         const Ipp16s* rowBelow = &frameBuffer[i * frameBufferWidth + frameBufferWidth];
 
-        std::mt19937 rng(std::random_device{}());
         const int fireOffset = std::uniform_int_distribution<int>(-2,2)(rng);
         ippsCopy_16s(rowBelow, &row[fireOffset], frameBufferWidth);
     }
     // Generate random distribution
     ippsRandUniform_16s(this->uniformRandomBuffer, this->frameBufferSize - frameBufferWidth, randState);
 
+    // Generate gaussian distribution
+    int gaussianSize{};
+    ippsRandGaussGetSize_16s(&gaussianSize);
+    IppsRandGaussState_16s* gaussianState = reinterpret_cast<IppsRandGaussState_16s *>(ippsMalloc_16s(gaussianSize));
+    ippsRandGaussInit_16s(gaussianState,
+        0,
+        4,
+        this->seededTime);
+    ippsRandGauss_16s(this->gaussianRandomBuffer, this->frameBufferSize - frameBufferWidth, gaussianState);
+
     // subtract random distribution buffer from copied row to simulate fire decay
+    ippsSub_16s_I(this->gaussianRandomBuffer, this->frameBuffer, this->frameBufferSize - frameBufferWidth);
     ippsSub_16s_I(this->uniformRandomBuffer, this->frameBuffer, this->frameBufferSize - frameBufferWidth);
-    ippsThreshold_LT_16s_I(this->frameBuffer, this->frameBufferSize, 0);
+    ippsThreshold_LT_16s_I(this->frameBuffer, this->frameBufferSize, minIntensity);
+    ippsThreshold_GT_16s_I(this->frameBuffer, this->frameBufferSize, maxIntensity);
 }
 
 void doomASCIIFire::openConfig()
@@ -152,6 +164,7 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     , frameDelay { 33 }
     , frameBuffer { ippsMalloc_16s(this->frameBufferSize) }
     , uniformRandomBuffer { ippsMalloc_16s(this->frameBufferSize) }
+    , gaussianRandomBuffer { ippsMalloc_16s(this->frameBufferSize) }
     , seededTime { time(nullptr) }
     , colour_band_multiplier { 1.0F }
     , backgroundMode(false)
@@ -163,7 +176,7 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     int randStateSize = 0;
     ippsRandUniformGetSize_16s(&randStateSize);
     randState = reinterpret_cast<IppsRandUniState_16s *>(ippsMalloc_8u(randStateSize));
-    ippsRandUniformInit_16s(randState, 0, 9, time(nullptr));
+    ippsRandUniformInit_16s(randState, 0, 9, this->seededTime);
 }
 
 doomASCIIFire::~doomASCIIFire()
