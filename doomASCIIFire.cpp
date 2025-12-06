@@ -24,9 +24,9 @@ void doomASCIIFire::openConfig()
     system("cls");
     std::cout << "ASCII Fire Configuration" << std::endl
             << "1) Set characters to use" << std::endl
-            << "2) Set colour bands" << std::endl
-            << "3) Set update delay" << std::endl
-            << "4) Quit" << std::endl;
+            << "2) Set colour temperature" << std::endl
+            << "4) Set update delay" << std::endl
+            << "5) Quit" << std::endl;
 
     bool exit = false;
     while (!exit)
@@ -42,19 +42,7 @@ void doomASCIIFire::openConfig()
             std::cin >> this->characters;
             this->openConfig();
         }
-        else if (GetAsyncKeyState('2') & 0x8000)
-        {
-            system("cls");
-            std::cout << "Currrent [Band One | Band Two] : " <<  "[" << this->colour_band_one << " | " << this->colour_band_two << "]" << std::endl
-            << "Band One > ";
-
-            std::cin >> this->colour_band_one;
-            std::cout << "Band Two > ";
-            std::cin >> this->colour_band_two;
-
-            this->openConfig();
-        }
-        else if (GetAsyncKeyState('3') & 0x8000)
+        else if (GetAsyncKeyState('4') & 0x8000)
         {
             system("cls");
             std::cout << "CURRENT (ms): " << this->frameDelay << std::endl
@@ -65,7 +53,7 @@ void doomASCIIFire::openConfig()
             this->frameDelay = std::stoi(delay);
             this->openConfig();
         }
-        else if (GetAsyncKeyState('3') & 0x8000)
+        else if (GetAsyncKeyState('5') & 0x8000)
         {
             exit = true;
         }
@@ -75,6 +63,11 @@ void doomASCIIFire::openConfig()
 void doomASCIIFire::wait() const
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(this->frameDelay));
+}
+
+void doomASCIIFire::updateDecayRate(int decayRate)
+{
+    ippsRandUniformInit_16s(randState, 0, decayRate, time(nullptr));
 }
 
 void doomASCIIFire::printFrame()
@@ -88,11 +81,11 @@ void doomASCIIFire::printFrame()
     {
         for (int x = 0; x < this->frameBufferWidth; ++x)
         {
-            short intensity = this->frameBuffer[pos++];
+            const short intensity = this->frameBuffer[pos++];
 
-            char character = this->intensityToChar(intensity);
+            const char character = this->intensityToChar(intensity);
 
-            std::string colouredCharacter = "\033[38;2;" + this->intensityToColour(intensity) + "m" + character + "\033[0m";
+            const std::string colouredCharacter = "\033[38;2;" + this->intensityToColour(intensity) + "m" + character + "\033[0m";
             frame += colouredCharacter;
         }
 
@@ -120,20 +113,23 @@ std::string doomASCIIFire::intensityToColour(const int intensity)
     // work out percentage to absolute zero
     float percentage = static_cast<float>(intensity) / static_cast<float>(maxIntensity);
 
-    if (percentage >= this->colour_band_one)
+    float colourBandOne = 0.66 * colour_band_multiplier;
+    float colourBandTwo = 0.33 * colour_band_multiplier;
+
+    if (percentage >= colourBandOne)
     {
-        blue = maxIntensity * this->normalise(percentage, this->colour_band_one, 1.0);
+        blue = maxIntensity * this->normalise(percentage, colourBandOne, 1.0);
     }
-    else if (percentage >= this->colour_band_two)
+    else if (percentage >= colourBandTwo)
     {
         blue = 0;
-        green = maxIntensity * this->normalise(percentage, this->colour_band_two, this->colour_band_one) ;
+        green = maxIntensity * this->normalise(percentage, colourBandTwo, colourBandOne) ;
     }
     else
     {
         blue = 0;
         green = 0;
-        red = maxIntensity * this->normalise(percentage, 0.0, this->colour_band_two);
+        red = maxIntensity * this->normalise(percentage, 0.0, colourBandTwo);
     }
 
     std::string colorCode = std::to_string(red) + ";" + std::to_string(green) + ";" + std::to_string(blue);
@@ -155,9 +151,8 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     , frameBuffer { ippsMalloc_16s(this->frameBufferSize) }
     , randomRow { ippsMalloc_16s(this->frameBufferWidth) }
     , frameDelay { 17 }
-    , colour_band_one { 0.66 }
-    , colour_band_two { 0.33 }
-    , characters { " .-oO0#" }
+    , colour_band_multiplier { 1.0F }
+    , characters { " .+*0#" }
 {
     ippsSet_16s(0, this->frameBuffer, this->frameBufferSize);
     Ipp16s* lastRow = &this->frameBuffer[this->frameBufferSize - this->frameBufferWidth];
@@ -166,7 +161,7 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     int randStateSize = 0;
     ippsRandUniformGetSize_16s(&randStateSize);
     randState = reinterpret_cast<IppsRandUniState_16s *>(ippsMalloc_8u(randStateSize));
-    ippsRandUniformInit_16s(randState, 0, 9, 789132);
+    ippsRandUniformInit_16s(randState, 0, 9, time(nullptr));
 }
 
 doomASCIIFire::~doomASCIIFire()

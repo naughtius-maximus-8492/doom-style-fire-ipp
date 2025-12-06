@@ -21,8 +21,6 @@ private:
      int frameBufferSize;
      int frameDelay;
 
-     float colour_band_one;
-     float colour_band_two;
 
      // Random related members
      Ipp16s* frameBuffer;
@@ -33,6 +31,8 @@ private:
      std::string intensityToColour(int intensity);
 
      static float normalise(float value, float min, float max);
+
+
 
 public:
      doomASCIIFire(int width, int height);
@@ -45,4 +45,7 @@ public:
 
      void wait() const;
 
+     void updateDecayRate(int decayRate);
+
+     float colour_band_multiplier;
 };
