@@ -6,13 +6,13 @@ void doomASCIIFire::initRandomFunctions()
     int randStateSize = 0;
     ippsRandUniformGetSize_16s(&randStateSize);
     uniformRandomState = reinterpret_cast<IppsRandUniState_16s *>(ippsMalloc_8u(randStateSize));
-    ippsRandUniformInit_16s(uniformRandomState, fixedLowBoundUniform, 9, this->seededTime);
+    ippsRandUniformInit_16s(uniformRandomState, defaultLowBoundUniform, defaultUpperBoundUniform, this->seededTime);
 
     // Init gaussian distribution
     int gaussianSize{};
     ippsRandGaussGetSize_16s(&gaussianSize);
     this->gaussianRandomState = reinterpret_cast<IppsRandGaussState_16s *>(ippsMalloc_16s(gaussianSize));
-    ippsRandGaussInit_16s(this->gaussianRandomState, fixedMeanGauss, 3, this->seededTime);
+    ippsRandGaussInit_16s(this->gaussianRandomState, defaultMeanGauss, defaultStandardDeviationGauss, this->seededTime);
 }
 
 void doomASCIIFire::decayStep() const
@@ -81,23 +81,22 @@ void doomASCIIFire::openConfig()
 
 void doomASCIIFire::updateDecayRate(int decayRate) const
 {
-    ippsRandUniformInit_16s(uniformRandomState, fixedLowBoundUniform, decayRate, this->seededTime);
-    ippsRandGaussInit_16s(this->gaussianRandomState, fixedMeanGauss, decayRate / 2 , this->seededTime);
+    ippsRandUniformInit_16s(uniformRandomState, defaultLowBoundUniform, decayRate, this->seededTime);
+    ippsRandGaussInit_16s(this->gaussianRandomState, defaultMeanGauss, decayRate / 3 , this->seededTime);
 }
 
 std::string doomASCIIFire::getFrame() const
 {
-    std::string* fullFrame = nullptr;
+
     std::string frame;
-    size_t stringSize = frameBufferSize * maxCharacterSize;
-    frame.reserve(stringSize);
-    frame.append("\033[" + std::to_string(this->frameBufferWidth) + "D"
-                + "\033[" + std::to_string(this->frameBufferSize) + "A");
+    frame.reserve((this->frameBufferSize + frameBufferPadding * 2) * maxCharacterSize);
 
     for (int i = 0; i < frameBufferSize; ++i)
     {
         const short intensity = this->frameBufferStart[i];
-        std::string colouredCharacter = this->getCharacter(intensity, this->characters[0]);
+
+        std::string colouredCharacter = this->getCharacter(intensity);
+
         frame.append(colouredCharacter);
 
         if (i % frameBufferWidth == 0)
@@ -110,21 +109,23 @@ std::string doomASCIIFire::getFrame() const
     return frame;
 }
 
-std::string doomASCIIFire::getCharacter(int intensity, char character) const
+std::string doomASCIIFire::getCharacter(int intensity) const
 {
     std::string colouredCharacter;
 
     const std::string rgbVal = intensityToColour(intensity);
+    const char character = intensityToChar(intensity);
 
     if (backgroundMode)
     {
-        character = ' ';
-        colouredCharacter = "\033[48;2;" + rgbVal + "m" + character + "\033[0m";
+        colouredCharacter = "\033[48;2;" + rgbVal + "m \033[0m";
     }
     else
     {
         colouredCharacter = "\033[38;2;" + rgbVal + ";48;2;" + this->intensityToColour(intensity * 0.1) + "m" + character + "\033[0m";
     }
+
+    return colouredCharacter;
 }
 
 char doomASCIIFire::intensityToChar(const int intensity) const
@@ -171,7 +172,7 @@ float doomASCIIFire::normalise(const float value, const float min, const float m
 }
 
 doomASCIIFire::doomASCIIFire(const int width, const int height)
-    : characters { " .oO0#" }
+    : characters { " .:|O000##" }
     , frameBufferWidth(width)
     , frameBufferHeight(height)
     , frameBufferSize(width * height)

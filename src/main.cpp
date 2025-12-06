@@ -31,12 +31,13 @@ int main()
 #endif
 
     doomASCIIFire fire(width, height);
-    float decayRate = 9;
+    float decayRate = 15;
     float colourBandMultiplier = 1.0F;
     auto last = std::chrono::steady_clock::now();
 
     while (true)
     {
+        std::cout << "\033[H";
         std::cout << fire.getFrame();
         fire.decayStep();
 

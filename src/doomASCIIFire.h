@@ -12,8 +12,10 @@
 constexpr unsigned int minIntensity = 0;
 constexpr unsigned int maxIntensity = 254;
 
-constexpr int fixedLowBoundUniform = 0;
-constexpr int fixedMeanGauss = 0;
+constexpr int defaultLowBoundUniform = 0;
+constexpr int defaultUpperBoundUniform = 15;
+constexpr int defaultMeanGauss = -3;
+constexpr int defaultStandardDeviationGauss = 5;
 
 constexpr unsigned int defaultDelay = 33;
 constexpr unsigned int maxCharacterSize = 52;
@@ -39,6 +41,7 @@ private:
 
      void initRandomFunctions();
 
+public:
      char intensityToChar(int intensity) const;
      std::string intensityToColour(int intensity) const;
 
@@ -46,12 +49,11 @@ private:
 
      time_t seededTime;
 
-public:
      doomASCIIFire(int width, int height);
      ~doomASCIIFire();
 
      std::string getFrame() const;
-     std::string getCharacter(int intensity, char character) const;
+     std::string getCharacter(int intensity) const;
      void decayStep() const;
 
      void openConfig();
