@@ -75,13 +75,9 @@ std::string doomASCIIFire::getFrame() const
     std::string frame = "\033[" + std::to_string(this->frameBufferWidth) + "D"   // left N
                         + "\033[" + std::to_string(this->frameBufferSize) + "A";  // up N
 
-    int pos = 0;
-
-    for (int y = 0; y < frameBufferHeight; ++y)
+    for (int i = 0; i < frameBufferSize; ++i)
     {
-        for (int x = 0; x < this->frameBufferWidth; ++x)
-        {
-            const short intensity = this->frameBuffer[pos++];
+            const short intensity = this->frameBuffer[i];
             char character;
             std::string mode;
 
@@ -98,9 +94,8 @@ std::string doomASCIIFire::getFrame() const
 
             const std::string colouredCharacter = "\033[" + mode + ";2;" + this->intensityToColour(intensity) + "m" + character + "\033[0m";
             frame += colouredCharacter;
-        }
 
-        if (y < frameBufferHeight - 1)
+        if (i % frameBufferWidth == 0)
         {
             frame+= '\n';
         }
