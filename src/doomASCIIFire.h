@@ -10,12 +10,12 @@
 #include <random>
 
 constexpr unsigned int minIntensity = 0;
-constexpr unsigned int maxIntensity = 254;
+constexpr unsigned int maxIntensity = 762;
 
 constexpr int defaultLowBoundUniform = 0;
-constexpr int defaultUpperBoundUniform = 15;
-constexpr int defaultMeanGauss = -3;
-constexpr int defaultStandardDeviationGauss = 5;
+constexpr int defaultUpperBoundUniform = 50;
+constexpr int defaultMeanGauss = -9;
+constexpr int defaultStandardDeviationGauss = 25;
 
 constexpr unsigned int defaultDelay = 33;
 constexpr unsigned int maxCharacterSize = 52;
@@ -29,6 +29,7 @@ private:
      unsigned int frameBufferWidth;
      unsigned int frameBufferHeight;
      int frameBufferSize;
+     int frameBufferFullSize;
      unsigned int frameBufferTopSize;
 
      unsigned int frameBufferPadding;
@@ -39,6 +40,9 @@ private:
      IppsRandUniState_16s* uniformRandomState;
      IppsRandGaussState_16s* gaussianRandomState;
 
+     int lastIntensity;
+     std::string reusableRGB;
+     std::string reusableRGBBackground;
      void initRandomFunctions();
 
 public:

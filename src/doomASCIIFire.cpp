@@ -3,13 +3,13 @@
 void doomASCIIFire::initRandomFunctions()
 {
     // Init uniform distribution
-    int randStateSize = 0;
+    int randStateSize {};
     ippsRandUniformGetSize_16s(&randStateSize);
     uniformRandomState = reinterpret_cast<IppsRandUniState_16s *>(ippsMalloc_8u(randStateSize));
     ippsRandUniformInit_16s(uniformRandomState, defaultLowBoundUniform, defaultUpperBoundUniform, this->seededTime);
 
     // Init gaussian distribution
-    int gaussianSize{};
+    int gaussianSize {};
     ippsRandGaussGetSize_16s(&gaussianSize);
     this->gaussianRandomState = reinterpret_cast<IppsRandGaussState_16s *>(ippsMalloc_16s(gaussianSize));
     ippsRandGaussInit_16s(this->gaussianRandomState, defaultMeanGauss, defaultStandardDeviationGauss, this->seededTime);
@@ -87,8 +87,7 @@ void doomASCIIFire::updateDecayRate(int decayRate) const
 
 std::string doomASCIIFire::getFrame() const
 {
-
-    std::string frame;
+    std::string frame = "\033[H";
     frame.reserve((this->frameBufferSize + frameBufferPadding * 2) * maxCharacterSize);
 
     for (int i = 0; i < frameBufferSize; ++i)
@@ -105,25 +104,30 @@ std::string doomASCIIFire::getFrame() const
         }
     }
 
-    frame.shrink_to_fit();
     return frame;
 }
 
-std::string doomASCIIFire::getCharacter(int intensity) const
+std::string doomASCIIFire::getCharacter(const int intensity) const
 {
-    std::string colouredCharacter;
-
-    const std::string rgbVal = intensityToColour(intensity);
     const char character = intensityToChar(intensity);
+
+    if (this->lastIntensity == intensity)
+    {
+        return &character;
+
+    }
+    float backgroundMultiplier = 0.1;
 
     if (backgroundMode)
     {
-        colouredCharacter = "\033[48;2;" + rgbVal + "m \033[0m";
+        backgroundMultiplier = 1.0;
     }
-    else
-    {
-        colouredCharacter = "\033[38;2;" + rgbVal + ";48;2;" + this->intensityToColour(intensity * 0.1) + "m" + character + "\033[0m";
-    }
+
+    const std::string rgbVal = intensityToColour(intensity);
+    const std::string rgbValBackground = intensityToColour(intensity * backgroundMultiplier);
+
+    std::string colouredCharacter = "\033[38;2;" + rgbVal + ";48;2;" +
+        this->intensityToColour(intensity * backgroundMultiplier) + "m" + character + "\033[0m";
 
     return colouredCharacter;
 }
@@ -136,8 +140,9 @@ char doomASCIIFire::intensityToChar(const int intensity) const
 
 std::string doomASCIIFire::intensityToColour(const int intensity) const
 {
-    int red = maxIntensity;
-    int green = maxIntensity;
+    const unsigned short maxColourVal = 254;
+    int red = maxColourVal;
+    int green = maxColourVal;
     int blue {};
 
     // work out percentage to absolute zero
@@ -148,18 +153,18 @@ std::string doomASCIIFire::intensityToColour(const int intensity) const
 
     if (percentage >= colourBandOne) // white to yellow
     {
-        blue = maxIntensity * this->normalise(percentage, colourBandOne, 1.0);
+        blue = maxColourVal * this->normalise(percentage, colourBandOne, 1.0);
     }
     else if (percentage >= colourBandTwo) // yellow to red
     {
         blue = 0;
-        green = maxIntensity * this->normalise(percentage, colourBandTwo, colourBandOne) ;
+        green = maxColourVal * this->normalise(percentage, colourBandTwo, colourBandOne) ;
     }
     else // red to black
     {
         blue = 0;
         green = 0;
-        red = maxIntensity * this->normalise(percentage, 0.0, colourBandTwo);
+        red = maxColourVal * this->normalise(percentage, 0.0, colourBandTwo);
     }
 
     return std::format("{:03}", red) + ";" + std::format("{:03}", green) + ";" + std::format("{:03}", blue);
@@ -176,18 +181,19 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     , frameBufferWidth(width)
     , frameBufferHeight(height)
     , frameBufferSize(width * height)
+    , frameBufferFullSize(this->frameBufferSize + height * flicker * 2)
     , frameBufferTopSize(frameBufferSize - width)
     , frameBufferPadding(height * flicker)
-    , frameDelay { 33 }
-    , frameBuffer { ippsMalloc_16s(this->frameBufferSize + frameBufferPadding * 2) }
+    , frameBuffer { ippsMalloc_16s(frameBufferFullSize) }
     , uniformRandomBuffer { ippsMalloc_16s(this->frameBufferSize) }
     , gaussianRandomBuffer { ippsMalloc_16s(this->frameBufferSize) }
     , seededTime { time(nullptr) }
     , colour_band_multiplier { 1.0F }
     , backgroundMode(false)
+    , frameDelay { 33 }
 {
     this->frameBufferStart = &frameBuffer[frameBufferPadding];
-    ippsSet_16s(0, this->frameBufferStart, this->frameBufferSize);
+    ippsSet_16s(0, this->frameBuffer, this->frameBufferFullSize);
     Ipp16s* lastRow = &this->frameBufferStart[this->frameBufferTopSize];
     ippsSet_16s(maxIntensity, lastRow, this->frameBufferWidth);
 

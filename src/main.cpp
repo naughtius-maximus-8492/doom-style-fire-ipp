@@ -30,14 +30,18 @@ int main()
     height = w.ws_row;
 #endif
 
+    if (width <= 0 || height <= 0)
+    {
+        width = 256;
+        height = 256;
+    }
     doomASCIIFire fire(width, height);
-    float decayRate = 15;
+    float decayRate = 64;
     float colourBandMultiplier = 1.0F;
     auto last = std::chrono::steady_clock::now();
 
     while (true)
     {
-        std::cout << "\033[H";
         std::cout << fire.getFrame();
         fire.decayStep();
 
@@ -78,6 +82,7 @@ int main()
 
         last = std::chrono::steady_clock::now();
 
+        std::cout << "\033[H";
     }
     return 0;
 }
