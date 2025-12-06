@@ -1,6 +1,7 @@
 #include <chrono>
 #include <iostream>
 #include <thread>
+#define NOMINMAX
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -29,8 +30,8 @@ int main()
 #endif
 
     doomASCIIFire fire(width, height);
-    float defaultDecayRate = 9;
-    float defaultColourBandMultiplier = 1.0F;
+    float decayRate = 9;
+    float colourBandMultiplier = 1.0F;
 
     while (true)
     {
@@ -41,29 +42,32 @@ int main()
         {
             fire.openConfig();
         }
-        if (GetAsyncKeyState(VK_UP) & 0x8000 && defaultDecayRate < 1000)
+        if (GetAsyncKeyState(VK_UP) & 0x8000 && decayRate < 1000)
         {
-            defaultDecayRate -= 0.25;
-            fire.updateDecayRate(defaultDecayRate);
+            decayRate -= 0.25;
+            fire.updateDecayRate(decayRate);
         }
-        if (GetAsyncKeyState(VK_DOWN) & 0x8000 && defaultDecayRate > 0)
+        if (GetAsyncKeyState(VK_DOWN) & 0x8000 && decayRate > 0)
         {
-            defaultDecayRate += 0.25;
-            fire.updateDecayRate(defaultDecayRate);
+            decayRate += 0.25;
+            fire.updateDecayRate(decayRate);
         }
-        if (GetAsyncKeyState(VK_LEFT) & 0x8000 && defaultColourBandMultiplier >= 0)
+        if (GetAsyncKeyState(VK_LEFT) & 0x8000 && colourBandMultiplier >= 0)
         {
-            defaultColourBandMultiplier -= 0.02;
-            fire.colour_band_multiplier = defaultColourBandMultiplier;
+            colourBandMultiplier -= 0.02;
+            fire.colour_band_multiplier = colourBandMultiplier;
         }
-        if (GetAsyncKeyState(VK_RIGHT) & 0x8000 && defaultColourBandMultiplier <= 1.5)
+        if (GetAsyncKeyState(VK_RIGHT) & 0x8000 && colourBandMultiplier <= 1.5)
         {
-            defaultColourBandMultiplier += 0.02;
-            fire.colour_band_multiplier = defaultColourBandMultiplier;
+            colourBandMultiplier += 0.02;
+            fire.colour_band_multiplier = colourBandMultiplier;
         }
-
+        if (GetAsyncKeyState('F') & 0x8000)
+        {
+            fire.backgroundMode =  !fire.backgroundMode;
+            Sleep(20);
+        }
         fire.wait();
-
     }
     return 0;
 }

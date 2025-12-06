@@ -2,13 +2,11 @@
 
 #include <ipp.h>
 #include <string>
-#include <algorithm>
-#include <limits>
-#include <iostream>
-#include <ostream>
 #include <thread>
+#include <iostream>
 #define NOMINMAX
 #include <Windows.h>
+#include <random>
 
 constexpr unsigned int maxIntensity = 254;
 
@@ -21,14 +19,12 @@ private:
      int frameBufferSize;
      int frameDelay;
 
-
-     // Random related members
      Ipp16s* frameBuffer;
      Ipp16s* randomRow;
      IppsRandUniState_16s* randState;
 
      char intensityToChar(int intensity) const;
-     std::string intensityToColour(int intensity);
+     std::string intensityToColour(int intensity) const;
 
      static float normalise(float value, float min, float max);
 
@@ -39,14 +35,15 @@ public:
      doomASCIIFire(int width, int height);
      ~doomASCIIFire();
 
-     void printFrame();
-     void decayStep();
+     void printFrame() const;
+     void decayStep() const;
 
      void openConfig();
 
      void wait() const;
 
-     void updateDecayRate(int decayRate);
+     void updateDecayRate(int decayRate) const;
 
      float colour_band_multiplier;
+     bool backgroundMode;
 };
