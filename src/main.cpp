@@ -1,6 +1,7 @@
 #include <chrono>
 #include <iostream>
 #include <thread>
+#include <chrono>
 #define NOMINMAX
 #ifdef _WIN32
 #include <windows.h>
@@ -32,6 +33,7 @@ int main()
     doomASCIIFire fire(width, height);
     float decayRate = 9;
     float colourBandMultiplier = 1.0F;
+    auto last = std::chrono::steady_clock::now();
 
     while (true)
     {
@@ -67,7 +69,14 @@ int main()
             fire.backgroundMode =  !fire.backgroundMode;
             Sleep(20);
         }
-        fire.wait();
+
+        while (std::chrono::steady_clock::now() - last < std::chrono::milliseconds(fire.frameDelay))
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+
+        last = std::chrono::steady_clock::now();
+
     }
     return 0;
 }

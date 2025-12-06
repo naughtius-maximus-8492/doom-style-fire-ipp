@@ -17,7 +17,6 @@ private:
      int frameBufferWidth;
      int frameBufferHeight;
      int frameBufferSize;
-     int frameDelay;
 
      Ipp16s* frameBuffer;
      Ipp16s* randomRow;
@@ -39,10 +38,9 @@ public:
 
      void openConfig();
 
-     void wait() const;
-
      void updateDecayRate(int decayRate) const;
 
      float colour_band_multiplier;
      bool backgroundMode;
+     int frameDelay;
 };

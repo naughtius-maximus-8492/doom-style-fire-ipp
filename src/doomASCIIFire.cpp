@@ -60,11 +60,6 @@ void doomASCIIFire::openConfig()
     }
 }
 
-void doomASCIIFire::wait() const
-{
-    std::this_thread::sleep_for(std::chrono::milliseconds(this->frameDelay));
-}
-
 void doomASCIIFire::updateDecayRate(int decayRate) const
 {
     ippsRandUniformInit_16s(randState, 0, decayRate, this->seededTime);
@@ -72,32 +67,33 @@ void doomASCIIFire::updateDecayRate(int decayRate) const
 
 std::string doomASCIIFire::getFrame() const
 {
-    std::string frame = "\033[" + std::to_string(this->frameBufferWidth) + "D"   // left N
-                        + "\033[" + std::to_string(this->frameBufferSize) + "A";  // up N
+    std::string frame;
+    frame.reserve(frameBufferSize * 24);
+    frame.append("\033[" + std::to_string(this->frameBufferWidth) + "D"
+                + "\033[" + std::to_string(this->frameBufferSize) + "A");
 
     for (int i = 0; i < frameBufferSize; ++i)
     {
-            const short intensity = this->frameBuffer[i];
-            char character;
-            std::string mode;
+        const short intensity = this->frameBuffer[i];
+        char character;
+        std::string mode;
 
-            if (backgroundMode)
-            {
-                mode = "48";
-                character = ' ';
-            }
-            else
-            {
-                mode = "38";
-                character = this->intensityToChar(intensity);
-            }
+        if (backgroundMode)
+        {
+            mode = "48";
+            character = ' ';
+        }
+        else
+        {
+            mode = "38";
+            character = this->intensityToChar(intensity);
+        }
 
-            const std::string colouredCharacter = "\033[" + mode + ";2;" + this->intensityToColour(intensity) + "m" + character + "\033[0m";
-            frame += colouredCharacter;
+        frame.append("\033[" + mode + ";2;" + this->intensityToColour(intensity) + "m" + character + "\033[0m");
 
         if (i % frameBufferWidth == 0)
         {
-            frame+= '\n';
+            frame.append("\n");
         }
     }
 
