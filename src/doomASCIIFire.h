@@ -30,12 +30,11 @@ private:
 
      time_t seededTime;
 
-
 public:
      doomASCIIFire(int width, int height);
      ~doomASCIIFire();
 
-     void printFrame() const;
+     std::string getFrame() const;
      void decayStep() const;
 
      void openConfig();

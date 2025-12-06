@@ -6,10 +6,35 @@ set(CMAKE_CXX_STANDARD 26)
 find_package(TBB REQUIRED)
 find_package(IPP REQUIRED)
 
-add_executable(doomAsciiFire
-        main.cpp
-        doomASCIIFire.h
-        doomASCIIFire.cpp
+include(FetchContent)
+
+FetchContent_Declare(
+        Catch2
+        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+        GIT_TAG        v3.11.0
 )
 
-target_link_libraries(doomAsciiFire TBB::tbb IPP::ipps)
+FetchContent_MakeAvailable(Catch2)
+
+add_executable(doomAsciiFire
+        src/main.cpp
+        src/doomASCIIFire.h
+        src/doomASCIIFire.cpp
+)
+
+add_executable(benchmarks
+        benchmarks.cpp
+        src/doomASCIIFire.cpp
+        src/doomASCIIFire.h
+)
+
+target_link_libraries(doomAsciiFire PRIVATE
+        TBB::tbb
+        IPP::ipps
+)
+
+target_link_libraries(benchmarks PRIVATE
+        Catch2::Catch2WithMain
+        TBB::tbb
+        IPP::ipps
+)

@@ -70,7 +70,7 @@ void doomASCIIFire::updateDecayRate(int decayRate) const
     ippsRandUniformInit_16s(randState, 0, decayRate, this->seededTime);
 }
 
-void doomASCIIFire::printFrame() const
+std::string doomASCIIFire::getFrame() const
 {
     std::string frame = "\033[" + std::to_string(this->frameBufferWidth) + "D"   // left N
                         + "\033[" + std::to_string(this->frameBufferSize) + "A";  // up N
@@ -106,7 +106,7 @@ void doomASCIIFire::printFrame() const
         }
     }
 
-    std::cout << frame;
+    return frame;
 }
 
 char doomASCIIFire::intensityToChar(const int intensity) const
@@ -124,8 +124,8 @@ std::string doomASCIIFire::intensityToColour(const int intensity) const
     // work out percentage to absolute zero
     const float percentage = static_cast<float>(intensity) / static_cast<float>(maxIntensity);
 
-    const float colourBandOne = 0.66 * colour_band_multiplier;
-    const float colourBandTwo = 0.33 * colour_band_multiplier;
+    const float colourBandOne = 0.80 * colour_band_multiplier;
+    const float colourBandTwo = 0.30 * colour_band_multiplier;
 
     if (percentage >= colourBandOne)
     {
@@ -161,7 +161,7 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     , frameBufferSize(frameBufferWidth * frameBufferHeight)
     , frameDelay { 33 }
     , frameBuffer { ippsMalloc_16s(this->frameBufferSize) }
-    , randomRow { ippsMalloc_16s(this->frameBufferWidth) }
+    , randomRow { ippsMalloc_16s(this->frameBufferSize) }
     , seededTime { time(nullptr) }
     , colour_band_multiplier { 1.0F }
     , backgroundMode(false)
@@ -178,7 +178,7 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
 
 doomASCIIFire::~doomASCIIFire()
 {
-    ippsFree(this->frameBuffer);
+    //ippsFree(this->frameBuffer);
     ippsFree(this->randomRow);
     ippsFree(this->randState);
 }

@@ -35,7 +35,7 @@ int main()
 
     while (true)
     {
-        fire.printFrame();
+        std::cout << fire.getFrame();
         fire.decayStep();
 
         if (GetAsyncKeyState('Q') & 0x8000)
