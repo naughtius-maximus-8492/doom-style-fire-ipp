@@ -13,9 +13,9 @@ constexpr unsigned int minIntensity = 0;
 constexpr unsigned int maxIntensity = 762;
 
 constexpr int defaultLowBoundUniform = 0;
-constexpr int defaultUpperBoundUniform = 50;
-constexpr int defaultMeanGauss = -6;
-constexpr int defaultStandardDeviationGauss = 16;
+constexpr int defaultUpperBoundUniform = 75;
+constexpr int defaultMeanGauss = -5;
+constexpr int defaultStandardDeviationGauss = 25;
 
 constexpr unsigned int defaultDelay = 42;
 constexpr unsigned int maxCharacterSize = 52;
