@@ -11,14 +11,13 @@ void doomASCIIFire::decayStep() const
         std::mt19937 rng(std::random_device{}());
         const int fireOffset = std::uniform_int_distribution<int>(-2,2)(rng);
         ippsCopy_16s(rowBelow, &row[fireOffset], frameBufferWidth);
-
-        // Generate random distribution
-        ippsRandUniform_16s(this->randomRow, this->frameBufferWidth, randState);
-
-        // subtract random distribution buffer from copied row to simulate fire decay
-        ippsSub_16s_I(this->randomRow, row, this->frameBufferWidth);
-        ippsThreshold_LT_16s_I(row, this->frameBufferWidth, 0);
     }
+    // Generate random distribution
+    ippsRandUniform_16s(this->uniformRandomBuffer, this->frameBufferSize - frameBufferWidth, randState);
+
+    // subtract random distribution buffer from copied row to simulate fire decay
+    ippsSub_16s_I(this->uniformRandomBuffer, this->frameBuffer, this->frameBufferSize - frameBufferWidth);
+    ippsThreshold_LT_16s_I(this->frameBuffer, this->frameBufferSize, 0);
 }
 
 void doomASCIIFire::openConfig()
@@ -89,7 +88,7 @@ std::string doomASCIIFire::getFrame() const
             character = this->intensityToChar(intensity);
         }
 
-        frame.append("\033[" + mode + ";2;" + this->intensityToColour(intensity) + "m" + character + "\033[0m");
+        frame.append("\033[" + mode + ";2;" + this->intensityToColour(intensity) + ";48;2;" + this->intensityToColour(intensity*0.1) + "m" + character + "\033[0m");
 
         if (i % frameBufferWidth == 0)
         {
@@ -146,13 +145,13 @@ float doomASCIIFire::normalise(const float value, const float min, const float m
 }
 
 doomASCIIFire::doomASCIIFire(const int width, const int height)
-    : characters { ".oO0#" }
+    : characters { " .oO0#" }
     , frameBufferWidth(width)
     , frameBufferHeight(height)
     , frameBufferSize(frameBufferWidth * frameBufferHeight)
     , frameDelay { 33 }
     , frameBuffer { ippsMalloc_16s(this->frameBufferSize) }
-    , randomRow { ippsMalloc_16s(this->frameBufferSize) }
+    , uniformRandomBuffer { ippsMalloc_16s(this->frameBufferSize) }
     , seededTime { time(nullptr) }
     , colour_band_multiplier { 1.0F }
     , backgroundMode(false)
@@ -170,6 +169,6 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
 doomASCIIFire::~doomASCIIFire()
 {
     //ippsFree(this->frameBuffer);
-    ippsFree(this->randomRow);
+    ippsFree(this->uniformRandomBuffer);
     ippsFree(this->randState);
 }

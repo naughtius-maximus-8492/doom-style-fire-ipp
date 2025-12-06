@@ -19,7 +19,8 @@ private:
      int frameBufferSize;
 
      Ipp16s* frameBuffer;
-     Ipp16s* randomRow;
+     Ipp16s* uniformRandomBuffer;
+     Ipp16s* gaussianRandomBuffer;
      IppsRandUniState_16s* randState;
 
      char intensityToChar(int intensity) const;
