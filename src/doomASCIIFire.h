@@ -11,18 +11,27 @@
 constexpr unsigned int minIntensity = 0;
 constexpr unsigned int maxIntensity = 254;
 
+constexpr int fixedLowBoundUniform = 0;
+constexpr int fixedMeanGauss = 0;
+
+constexpr unsigned int defaultDelay = 33;
+
 class doomASCIIFire
 {
 private:
      std::string characters;
-     int frameBufferWidth;
-     int frameBufferHeight;
-     int frameBufferSize;
+     unsigned int frameBufferWidth;
+     unsigned int frameBufferHeight;
+     unsigned int frameBufferSize;
+     unsigned int frameBufferTopSize;
 
      Ipp16s* frameBuffer;
      Ipp16s* uniformRandomBuffer;
      Ipp16s* gaussianRandomBuffer;
-     IppsRandUniState_16s* randState;
+     IppsRandUniState_16s* uniformRandomState;
+     IppsRandGaussState_16s* gaussianRandomState;
+
+     void initRandomFunctions();
 
      char intensityToChar(int intensity) const;
      std::string intensityToColour(int intensity) const;
@@ -36,7 +45,7 @@ public:
      ~doomASCIIFire();
 
      std::string getFrame() const;
-     void decayStep() const;
+     void decayStep();
 
      void openConfig();
 
