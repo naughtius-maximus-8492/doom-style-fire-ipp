@@ -15,7 +15,7 @@ void doomASCIIFire::initRandomFunctions()
     ippsRandGaussInit_16s(this->gaussianRandomState, fixedMeanGauss, 3, this->seededTime);
 }
 
-void doomASCIIFire::decayStep()
+void doomASCIIFire::decayStep() const
 {
     std::mt19937 rng(std::random_device{}());
     // copy frames upwards
@@ -24,7 +24,7 @@ void doomASCIIFire::decayStep()
         Ipp16s* row = &frameBuffer[i * frameBufferWidth];
         const Ipp16s* rowBelow = &frameBuffer[i * frameBufferWidth + frameBufferWidth];
 
-        const int fireOffset = std::uniform_int_distribution<int>(-3,2)(rng);
+        int fireOffset = std::uniform_int_distribution<int>(-3,2)(rng);
         ippsCopy_16s(rowBelow, &row[fireOffset], frameBufferWidth);
     }
     // Generate random distribution
@@ -88,7 +88,8 @@ void doomASCIIFire::updateDecayRate(int decayRate) const
 std::string doomASCIIFire::getFrame() const
 {
     std::string frame;
-    frame.reserve(frameBufferSize * 24);
+    size_t stringSize = frameBufferSize * maxCharacterSize;
+    frame.reserve(stringSize);
     frame.append("\033[" + std::to_string(this->frameBufferWidth) + "D"
                 + "\033[" + std::to_string(this->frameBufferSize) + "A");
 
@@ -96,20 +97,19 @@ std::string doomASCIIFire::getFrame() const
     {
         const short intensity = this->frameBuffer[i];
         char character;
-        std::string mode;
+        std::string colouredCharacter;
 
         if (backgroundMode)
         {
-            mode = "48";
             character = ' ';
+            colouredCharacter = "\033[48;2;" + this->intensityToColour(intensity) + "m" + character + "\033[0m";
         }
         else
         {
-            mode = "38";
             character = this->intensityToChar(intensity);
+            colouredCharacter = "\033[38;2;" + this->intensityToColour(intensity) + ";48;2;" + this->intensityToColour(intensity*0.1) + "m" + character + "\033[0m";
         }
-
-        frame.append("\033[" + mode + ";2;" + this->intensityToColour(intensity) + ";48;2;" + this->intensityToColour(intensity*0.1) + "m" + character + "\033[0m");
+        frame.append(colouredCharacter);
 
         if (i % frameBufferWidth == 0)
         {
@@ -117,6 +117,7 @@ std::string doomASCIIFire::getFrame() const
         }
     }
 
+    frame.shrink_to_fit();
     return frame;
 }
 
@@ -156,9 +157,7 @@ std::string doomASCIIFire::intensityToColour(const int intensity) const
         red = maxIntensity * this->normalise(percentage, 0.0, colourBandTwo);
     }
 
-    std::string colorCode = std::to_string(red) + ";" + std::to_string(green) + ";" + std::to_string(blue);
-    return colorCode;
-
+    return std::format("{:03}", red) + ";" + std::format("{:03}", green) + ";" + std::format("{:03}", blue);
 }
 
 float doomASCIIFire::normalise(const float value, const float min, const float max)

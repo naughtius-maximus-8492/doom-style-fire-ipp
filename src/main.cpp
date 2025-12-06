@@ -67,7 +67,7 @@ int main()
         if (GetAsyncKeyState('F') & 0x8000)
         {
             fire.backgroundMode =  !fire.backgroundMode;
-            Sleep(20);
+            Sleep(100);
         }
 
         while (std::chrono::steady_clock::now() - last < std::chrono::milliseconds(fire.frameDelay))

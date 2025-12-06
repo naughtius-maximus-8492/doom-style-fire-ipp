@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ipp.h>
+#include <tbb/tbb.h>
 #include <string>
 #include <thread>
 #include <iostream>
@@ -15,6 +16,7 @@ constexpr int fixedLowBoundUniform = 0;
 constexpr int fixedMeanGauss = 0;
 
 constexpr unsigned int defaultDelay = 33;
+constexpr unsigned int maxCharacterSize = 52;
 
 class doomASCIIFire
 {
@@ -22,7 +24,7 @@ private:
      std::string characters;
      unsigned int frameBufferWidth;
      unsigned int frameBufferHeight;
-     unsigned int frameBufferSize;
+     int frameBufferSize;
      unsigned int frameBufferTopSize;
 
      Ipp16s* frameBuffer;
@@ -45,7 +47,7 @@ public:
      ~doomASCIIFire();
 
      std::string getFrame() const;
-     void decayStep();
+     void decayStep() const;
 
      void openConfig();
 
