@@ -24,9 +24,8 @@ void doomASCIIFire::openConfig()
     system("cls");
     std::cout << "ASCII Fire Configuration" << std::endl
             << "1) Set characters to use" << std::endl
-            << "2) Set colour temperature" << std::endl
-            << "4) Set update delay" << std::endl
-            << "5) Quit" << std::endl;
+            << "2) Set update delay" << std::endl
+            << "3) Back to fire" << std::endl;
 
     bool exit = false;
     while (!exit)
@@ -42,7 +41,7 @@ void doomASCIIFire::openConfig()
             std::cin >> this->characters;
             this->openConfig();
         }
-        else if (GetAsyncKeyState('4') & 0x8000)
+        else if (GetAsyncKeyState('2') & 0x8000)
         {
             system("cls");
             std::cout << "CURRENT (ms): " << this->frameDelay << std::endl
@@ -53,7 +52,7 @@ void doomASCIIFire::openConfig()
             this->frameDelay = std::stoi(delay);
             this->openConfig();
         }
-        else if (GetAsyncKeyState('5') & 0x8000)
+        else if (GetAsyncKeyState('3') & 0x8000)
         {
             exit = true;
         }
