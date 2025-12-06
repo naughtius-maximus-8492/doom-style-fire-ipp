@@ -43,22 +43,22 @@ int main()
         }
         if (GetAsyncKeyState(VK_UP) & 0x8000 && defaultDecayRate < 1000)
         {
-            defaultDecayRate -= 0.1;
+            defaultDecayRate -= 0.25;
             fire.updateDecayRate(defaultDecayRate);
         }
         if (GetAsyncKeyState(VK_DOWN) & 0x8000 && defaultDecayRate > 0)
         {
-            defaultDecayRate += 0.1;
+            defaultDecayRate += 0.25;
             fire.updateDecayRate(defaultDecayRate);
         }
         if (GetAsyncKeyState(VK_LEFT) & 0x8000 && defaultColourBandMultiplier >= 0)
         {
-            defaultColourBandMultiplier -= 0.01;
+            defaultColourBandMultiplier -= 0.02;
             fire.colour_band_multiplier = defaultColourBandMultiplier;
         }
         if (GetAsyncKeyState(VK_RIGHT) & 0x8000 && defaultColourBandMultiplier <= 1.5)
         {
-            defaultColourBandMultiplier += 0.01;
+            defaultColourBandMultiplier += 0.02;
             fire.colour_band_multiplier = defaultColourBandMultiplier;
         }
 

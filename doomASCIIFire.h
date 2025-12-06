@@ -32,6 +32,7 @@ private:
 
      static float normalise(float value, float min, float max);
 
+     time_t seededTime;
 
 
 public:

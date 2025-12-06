@@ -67,7 +67,7 @@ void doomASCIIFire::wait() const
 
 void doomASCIIFire::updateDecayRate(int decayRate)
 {
-    ippsRandUniformInit_16s(randState, 0, decayRate, time(nullptr));
+    ippsRandUniformInit_16s(randState, 0, decayRate, this->seededTime);
 }
 
 void doomASCIIFire::printFrame()
@@ -153,6 +153,7 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     , frameDelay { 17 }
     , colour_band_multiplier { 1.0F }
     , characters { " .+*0#" }
+    , seededTime { time(nullptr) }
 {
     ippsSet_16s(0, this->frameBuffer, this->frameBufferSize);
     Ipp16s* lastRow = &this->frameBuffer[this->frameBufferSize - this->frameBufferWidth];
