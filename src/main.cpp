@@ -2,9 +2,8 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
-#define NOMINMAX
-#ifdef _WIN32
-#include <windows.h>
+
+#ifdef WIN32
 #else
 #include <sys/ioctl.h>
 #endif
@@ -45,44 +44,43 @@ int main()
         std::cout << fire.getFrame();
         fire.decayStep();
 
-        if (GetAsyncKeyState('Q') & 0x8000)
+        if (detect_key_press('Q'))
         {
             fire.openConfig();
+            std::this_thread::sleep_for(std::chrono::milliseconds(150));
         }
-        if (GetAsyncKeyState(VK_UP) & 0x8000)
+        if (detect_key_press('W'))
         {
             decayRate -= 0.75;
             fire.updateDecayRate(decayRate);
         }
-        if (GetAsyncKeyState(VK_DOWN) & 0x8000)
+        if (detect_key_press('A'))
         {
             decayRate += 0.75;
             fire.updateDecayRate(decayRate);
         }
-        if (GetAsyncKeyState(VK_LEFT) & 0x8000 && colourBandMultiplier)
+        if (detect_key_press('S'))
         {
             colourBandMultiplier += 0.02;
         }
-        if (GetAsyncKeyState(VK_RIGHT) & 0x8000 && colourBandMultiplier)
+        if (detect_key_press('D'))
         {
             colourBandMultiplier -= 0.02;
         }
-        if (GetAsyncKeyState('F') & 0x8000)
+        if (detect_key_press('F'))
         {
             fire.backgroundMode =  !fire.backgroundMode;
-            Sleep(100);
+            std::this_thread::sleep_for(std::chrono::milliseconds(75));
         }
 
         fire.colour_band_multiplier = colourBandMultiplier;
 
         while (std::chrono::steady_clock::now() - last < std::chrono::milliseconds(fire.frameDelay))
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::sleep_for(std::chrono::nanoseconds(100));
         }
 
         last = std::chrono::steady_clock::now();
-
-        std::cout << "\033[H";
     }
     return 0;
 }

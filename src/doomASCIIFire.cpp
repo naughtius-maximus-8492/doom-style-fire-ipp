@@ -46,25 +46,32 @@ void doomASCIIFire::openConfig()
     std::cout << "ASCII Fire Configuration" << std::endl
             << "1) Set characters to use" << std::endl
             << "2) Set update delay" << std::endl
-            << "3) Back to fire" << std::endl << std::endl
+            << "Q) Back to fire" << std::endl << std::endl
     << "Live Configuration Binds:" << std::endl
     << "Up/Down    : Fire Height" << std::endl
     << "Left/Right : Fire Temperature" << std::endl
     << "F          : ASCII On/Off";
 
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
     bool exit = false;
     while (!exit)
     {
-        if (GetAsyncKeyState('1') & 0x8000)
+        if (detect_key_press('1'))
         {
             system("cls");
             std::cout << "Current: \"" <<  this->characters << "\"" << std::endl
             << "Type characters to distribute as the temperature changes (low - high)" << std::endl
             << "> ";
+
+            while (std::cin.rdbuf()->in_avail() > 0) {
+                std::cin.get();
+            }
+
             std::cin >> this->characters;
             this->openConfig();
         }
-        else if (GetAsyncKeyState('2') & 0x8000)
+        else if (detect_key_press('2'))
         {
             system("cls");
             std::cout << "CURRENT (ms): " << this->frameDelay << std::endl
@@ -72,7 +79,7 @@ void doomASCIIFire::openConfig()
             std::cin >> this->frameDelay;
             this->openConfig();
         }
-        else if (GetAsyncKeyState('3') & 0x8000)
+        else if (detect_key_press('Q'))
         {
             exit = true;
         }
@@ -88,6 +95,7 @@ void doomASCIIFire::updateDecayRate(int decayRate) const
 std::string doomASCIIFire::getFrame() const
 {
     std::string frame = "\033[H";
+
     frame.reserve((this->frameBufferSize + frameBufferPadding * 2) * maxCharacterSize);
 
     for (int i = 0; i < frameBufferSize; ++i)
@@ -98,7 +106,7 @@ std::string doomASCIIFire::getFrame() const
 
         frame.append(colouredCharacter);
 
-        if (i % frameBufferWidth == 0)
+        if (i % frameBufferWidth == 0 && i > 0)
         {
             frame.append("\n");
         }
@@ -111,11 +119,6 @@ std::string doomASCIIFire::getCharacter(const int intensity) const
 {
     const char character = intensityToChar(intensity);
 
-    if (this->lastIntensity == intensity)
-    {
-        return &character;
-
-    }
     float backgroundMultiplier = 0.1;
 
     if (backgroundMode)
@@ -165,8 +168,7 @@ std::string doomASCIIFire::intensityToColour(const int intensity) const
         green = 0;
         red = maxColourVal * this->normalise(percentage, 0.0, colourBandTwo);
     }
-
-    return std::format("{:03}", red) + ";" + std::format("{:03}", green) + ";" + std::format("{:03}", blue);
+    return std::to_string(red) + ";" + std::to_string(green) + ";" + std::to_string(blue);
 }
 
 float doomASCIIFire::normalise(const float value, const float min, const float max)

@@ -5,9 +5,8 @@
 #include <string>
 #include <thread>
 #include <iostream>
-#define NOMINMAX
-#include <Windows.h>
 #include <random>
+#include "inputUtils.h"
 
 constexpr unsigned int minIntensity = 0;
 constexpr unsigned int maxIntensity = 762;
@@ -40,9 +39,6 @@ private:
      IppsRandUniState_16s* uniformRandomState;
      IppsRandGaussState_16s* gaussianRandomState;
 
-     int lastIntensity;
-     std::string reusableRGB;
-     std::string reusableRGBBackground;
      void initRandomFunctions();
 
 public:
