@@ -21,7 +21,7 @@ TEST_CASE("Benchmarks")
 
         BENCHMARK("Get frame " + std::to_string(height) + "x" + std::to_string(width))
         {
-            std::string frame = tempFire.getFrame();
+            std::string frame = tempFire.getFrame().get();
         };
     }
 

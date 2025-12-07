@@ -107,35 +107,33 @@ void doomASCIIFire::updateDecayRate(short decayRate) const
 
 std::string doomASCIIFire::getFrame() const
 {
-    std::string oldFrame = "\033[H";
-    char* frame = new char[this->frameBufferSize * maxCharacterSize * sizeof(char)];
-    oldFrame.reserve(this->frameBufferSize * maxCharacterSize);
+    const int frameSize = this->frameBufferSize * characterLength + this->frameBufferHeight;
+    std::shared_ptr<char[]> frame = std::make_shared<char[]>(frameSize);
 
-    for (int i = 0; i < this->frameBufferSize; ++i)
-    // tbb::parallel_for(static_cast<size_t>(0), static_cast<size_t>(this->frameBufferHeight - 1), [&](const size_t i)
+    // for (int i = 0; i < this->frameBufferSize; ++i)
+    tbb::parallel_for(static_cast<size_t>(0), static_cast<size_t>(this->frameBufferSize), [&](const size_t i)
     {
         const short intensity = this->frameBuffer[i / this->frameBufferWidth][i % this->frameBufferWidth];
 
-        std::string colouredCharacter = this->getCharacter(intensity);
-
-        oldFrame.append(colouredCharacter);
-        // char* framePos = &frame[i * maxCharacterSize * sizeof(colouredCharacter)];
-        // std::ranges::copy(colouredCharacter, framePos);
+        std::string colouredCharacter {};
 
         if (i % this->frameBufferWidth == 0)
         {
-            oldFrame.append("\n");
+            colouredCharacter = this->getCharacter(intensity, true);
         }
+        else
+        {
+            colouredCharacter = this->getCharacter(intensity);
+        }
+
+        std::ranges::copy(colouredCharacter, &frame[i * characterLength]);
     }
-    // );
+    );
 
-    // std::string oldFrame = frame;
-
-    delete [] frame;
-    return oldFrame;
+    return frame.get();
 }
 
-std::string doomASCIIFire::getCharacter(const int intensity) const
+std::string doomASCIIFire::getCharacter(const int intensity, bool newline) const
 {
     const char character = intensityToChar(intensity);
 
@@ -149,9 +147,15 @@ std::string doomASCIIFire::getCharacter(const int intensity) const
     const std::string rgbVal = intensityToColour(intensity);
     const std::string rgbValBackground = intensityToColour(intensity * backgroundMultiplier);
 
-    std::string colouredCharacter = "\033[38;2;" + rgbVal + ";48;2;" + rgbValBackground + "m" + character + "\033[0m";
+    if (newline)
+    {
+        return "\033[38;2;" + rgbVal + ";48;2;" + rgbValBackground + "m" + character + "\033[0m\n";
+    }
+    else
+    {
+        return "\033[038;2;" + rgbVal + ";48;2;" + rgbValBackground + "m" + character + "\033[0m";
+    }
 
-    return colouredCharacter;
 }
 
 char doomASCIIFire::intensityToChar(const int intensity) const

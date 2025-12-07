@@ -17,7 +17,7 @@ constexpr int defaultMeanGauss = -5;
 constexpr int defaultStandardDeviationGauss = 25;
 
 constexpr unsigned int defaultDelay = 73;
-constexpr unsigned int maxCharacterSize = 52;
+constexpr unsigned int characterLength = 42;
 
 constexpr int flicker = 4;
 
@@ -40,7 +40,7 @@ private:
 
      char intensityToChar(int intensity) const;
      std::string intensityToColour(int intensity) const;
-     std::string getCharacter(int intensity) const;
+     std::string getCharacter(int intensity, bool newline = false) const;
 
      static float normalise(float value, float min, float max);
 

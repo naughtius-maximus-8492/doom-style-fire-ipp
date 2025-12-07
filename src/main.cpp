@@ -43,6 +43,7 @@ int main()
     while (fire.running)
     {
         fire.decayStep();
+        std::cout << "\033[H";
         std::string frame = fire.getFrame();
 
         while (std::chrono::steady_clock::now() - last < std::chrono::milliseconds(fire.frameDelay))
