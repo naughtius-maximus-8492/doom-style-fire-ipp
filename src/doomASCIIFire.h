@@ -12,19 +12,17 @@ constexpr unsigned int minIntensity = 0;
 constexpr unsigned int maxIntensity = 762;
 
 constexpr int defaultLowBoundUniform = 0;
-constexpr int defaultUpperBoundUniform = 75;
 constexpr int defaultMeanGauss = -5;
-constexpr int defaultStandardDeviationGauss = 25;
 
-constexpr unsigned int defaultDelay = 73;
-constexpr unsigned int characterLength = 42;
+constexpr unsigned int defaultDelay = 67;
+constexpr unsigned int fixedCharacterLength = 42;
 
-constexpr int flicker = 4;
+constexpr int flicker = 3;
 
 class doomASCIIFire
 {
 private:
-     bool decayStepRunning;
+     int decayRate;
      std::string characters;
      int frameBufferWidth;
      int frameBufferHeight;
@@ -41,7 +39,7 @@ private:
 
      char intensityToChar(int intensity) const;
      std::string intensityToColour(int intensity) const;
-     std::string getCharacter(int intensity, bool newline = false) const;
+     inline std::string getCharacter(int intensity, bool newline = false) const;
 
      static float normalise(float value, float min, float max);
 
@@ -61,5 +59,5 @@ public:
 
      void openConfig();
 
-     void updateDecayRate(short decayRate) const;
+     void updateDecayRate(bool increment);
 };

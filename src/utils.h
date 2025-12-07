@@ -13,6 +13,14 @@ inline void printFrameFast(const std::string& frame)
     WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), frame.c_str(), frame.length(), &written, nullptr);
 }
 
+inline void calculateHeightWidth(int* height, int* width)
+{
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    const HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    GetConsoleScreenBufferInfo(hConsole, &csbi);
+    *width = csbi.dwSize.X;
+    *height = csbi.dwSize.Y;
+}
 
 #else
 
@@ -23,4 +31,17 @@ inline void printFrameFast(const std::string& frame)
     write(STDOUT_FILENO, frame.data(), frame.size());
 }
 
+inline void calculateHeightWidth(int* height, int* width)
+{
+    struct winsize w;
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == 0)
+        *width = w.ws_col;
+    *height = w.ws_row;
+}
 #endif
+
+// Universal compatibility
+inline void clearScreen()
+{
+    std::cout << "\033[2J\033[H";
+}

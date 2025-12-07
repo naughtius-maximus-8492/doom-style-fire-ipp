@@ -14,40 +14,29 @@ int main()
     int width {};
     int height {};
 
-#ifdef _WIN32
-    // Work out size of console in windows
-    CONSOLE_SCREEN_BUFFER_INFO csbi;
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-    GetConsoleScreenBufferInfo(hConsole, &csbi);
-    width = csbi.dwSize.X;
-    height = csbi.dwSize.Y;
-#else
-    struct winsize w;
-    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == 0)
-    width = w.ws_col;
-    height = w.ws_row;
-#endif
+    calculateHeightWidth(&height, &width);
 
+    // For running in IDE debug
     if (width <= 0 || height <= 0)
     {
         width = 256;
         height = 256;
     }
 
-    doomASCIIFire fire(width, height);
+    doomASCIIFire* fire = new doomASCIIFire(width, height);
 
-    short decayRate = 75;
-    float colourBandMultiplier = 1.0F;
     auto last = std::chrono::steady_clock::now();
 
+    int oldHeight = height;
+    int oldWidth = width;
     bool running = true;
     while (running)
     {
-        fire.decayStep();
+        fire->decayStep();
         std::cout << "\033[H";
-        std::string frame = fire.getFrame();
+        std::string frame = fire->getFrame();
 
-        while (std::chrono::steady_clock::now() - last < std::chrono::milliseconds(fire.frameDelay))
+        while (std::chrono::steady_clock::now() - last < std::chrono::milliseconds(fire->frameDelay) || fire->frameDelay > defaultDelay)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
@@ -55,46 +44,64 @@ int main()
         last = std::chrono::steady_clock::now();
 
         printFrameFast(frame);
-        fire.decayStep();
+        fire->decayStep();
 
 #ifdef WIN32
 
         if (detect_key_press('Q'))
         {
-            fire.openConfig();
+            fire->openConfig();
             std::this_thread::sleep_for(std::chrono::milliseconds(150));
         }
-        if (detect_key_press('K'))
+        if (detect_key_press(VK_UP))
         {
-            decayRate--;
-            fire.updateDecayRate(decayRate);
+            fire->updateDecayRate(true);
         }
-        if (detect_key_press('J'))
+        if (detect_key_press(VK_DOWN))
         {
-            decayRate++;
-            fire.updateDecayRate(decayRate);
+            fire->updateDecayRate(false);
         }
-        if (detect_key_press('L'))
+        if (detect_key_press(VK_RIGHT))
         {
-            colourBandMultiplier -= 0.02;
+            fire->colour_band_multiplier -= 0.02;
         }
-        if (detect_key_press('H'))
+        if (detect_key_press(VK_LEFT))
         {
-            colourBandMultiplier += 0.02;
+            fire->colour_band_multiplier += 0.02;
         }
         if (detect_key_press('F'))
         {
-            fire.backgroundMode =  !fire.backgroundMode;
-            std::this_thread::sleep_for(std::chrono::milliseconds(75));
+            fire->backgroundMode =  !fire->backgroundMode;
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+        if (detect_key_press('R'))
+        {
+            delete fire;
+            fire = new doomASCIIFire(width, height);
         }
         if (detect_key_press(VK_ESCAPE))
         {
-            exit = true;
+            running = false;
         }
 
-        fire.colour_band_multiplier = colourBandMultiplier;
 #endif
 
+        // Check if window size has changed
+
+        calculateHeightWidth(&height, &width);
+        if (oldHeight != height || oldWidth != width)
+        {
+            oldHeight = height;
+            oldWidth = width;
+            delete fire;
+            fire = new doomASCIIFire(width, height);
+        }
+
     }
+
+    delete fire;
+
+    clearScreen();
+
     return 0;
 }

@@ -6,27 +6,47 @@ void doomASCIIFire::initRandomFunctions()
     int randStateSize {};
     ippsRandUniformGetSize_16s(&randStateSize);
     uniformRandomState = reinterpret_cast<IppsRandUniState_16s *>(ippsMalloc_8u(randStateSize));
-    ippsRandUniformInit_16s(uniformRandomState, defaultLowBoundUniform, defaultUpperBoundUniform, this->seededTime);
+    ippsRandUniformInit_16s(uniformRandomState, defaultLowBoundUniform, this->decayRate, this->seededTime);
 
     // Init gaussian distribution
     int gaussianSize {};
     ippsRandGaussGetSize_16s(&gaussianSize);
     this->gaussianRandomState = reinterpret_cast<IppsRandGaussState_16s *>(ippsMalloc_16s(gaussianSize));
-    ippsRandGaussInit_16s(this->gaussianRandomState, defaultMeanGauss, defaultStandardDeviationGauss, this->seededTime);
+    ippsRandGaussInit_16s(this->gaussianRandomState, defaultMeanGauss, this->decayRate / 2, this->seededTime);
 }
 
 void doomASCIIFire::decayStep() const
 {
+    std::mt19937 rng(this->seededTime);
+
     // copy frames upwards
     tbb::parallel_for(static_cast<size_t>(0), static_cast<size_t>(this->frameBufferHeight - 1), [&](const size_t i)
     {
-        std::mt19937 rng(std::random_device{}());
-
         Ipp16s* row = this->frameBuffer[i];
-        const Ipp16s* rowBelow = this->frameBuffer[i + 1];
+        Ipp16s* rowBelow = this->frameBuffer[i + 1];
 
-        const int fireOffset = std::uniform_int_distribution<int>(flicker * -1,flicker)(rng);
-        ippsCopy_16s(rowBelow, &row[fireOffset], frameBufferWidth - std::abs(fireOffset));
+        int fireOffset = std::uniform_int_distribution<int>(flicker * -1,flicker)(rng);
+
+        const unsigned int positiveFireOffset = std::abs(fireOffset);
+        Ipp16s* offsetBuffer = ippsMalloc_16s(fireOffset);
+
+        if (fireOffset == 0)
+        {
+            fireOffset--;
+        }
+        if (fireOffset > 0)
+        {
+            ippsCopy_16s(&rowBelow[this->frameBufferWidth - positiveFireOffset], offsetBuffer, positiveFireOffset);
+            ippsCopy_16s(rowBelow, &row[positiveFireOffset], this->frameBufferWidth - positiveFireOffset);
+            ippsCopy_16s(offsetBuffer, row, fireOffset);
+        }
+        else if (fireOffset < 0)
+        {
+            ippsCopy_16s(rowBelow, offsetBuffer, positiveFireOffset);
+            ippsCopy_16s(&rowBelow[positiveFireOffset], row, this->frameBufferWidth - positiveFireOffset);
+            ippsCopy_16s(offsetBuffer, &row[this->frameBufferWidth - positiveFireOffset], positiveFireOffset);
+        }
+        ippsFree(offsetBuffer);
 
         // Generate random distribution
         Ipp16s* uniformBufferPos = &this->uniformRandomBuffer[i * frameBufferWidth];
@@ -47,7 +67,7 @@ void doomASCIIFire::decayStep() const
 void doomASCIIFire::openConfig()
 {
 #ifdef WIN32
-    system("cls");
+    clearScreen();
     std::cout << "ASCII Fire Configuration" << std::endl
             << "1) Set characters to use" << std::endl
             << "2) Set update delay" << std::endl
@@ -55,8 +75,10 @@ void doomASCIIFire::openConfig()
     << "Live Configuration Binds:" << std::endl
     << "K/J    : Fire Height" << std::endl
     << "H/L    : Fire Temperature" << std::endl
-    << "F      : Characters On/Off" << std::endl;
-
+    << "F      : Characters On/Off" << std::endl << std::endl
+    << "Statistics:" << std::endl
+    << "Frame buffer height : " << this->frameBufferHeight << std::endl
+    << "Frame buffer width  : " << this->frameBufferWidth << std::endl;
 
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
@@ -65,70 +87,89 @@ void doomASCIIFire::openConfig()
     {
         if (detect_key_press('1'))
         {
-            system("cls");
+            clearScreen();
+
             std::cout << "Current: \"" <<  this->characters << "\"" << std::endl
             << "Type characters to distribute as the temperature changes (low - high)" << std::endl
             << "> ";
 
-            while (std::cin.rdbuf()->in_avail() > 0) {
-                std::cin.get();
-            }
-
+            FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
             std::cin >> this->characters;
+
             this->openConfig();
         }
         else if (detect_key_press('2'))
         {
-            system("cls");
+            clearScreen();
+
             std::cout << "CURRENT (ms): " << this->frameDelay << std::endl
             << "> ";
+
+            FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
             std::cin >> this->frameDelay;
+
             this->openConfig();
         }
         else if (detect_key_press('Q'))
         {
+            clearScreen();
             exit = true;
         }
     }
 #endif
 }
 
-void doomASCIIFire::updateDecayRate(short decayRate) const
+void doomASCIIFire::updateDecayRate(bool increment)
 {
+    if (increment)
+    {
+        this->decayRate++;
+    }
+    else
+    {
+        this->decayRate--;
+    }
+
     ippsRandUniformInit_16s(uniformRandomState, defaultLowBoundUniform, decayRate, this->seededTime);
-    ippsRandGaussInit_16s(this->gaussianRandomState, defaultMeanGauss, decayRate / 3 , this->seededTime);
+    ippsRandGaussInit_16s(this->gaussianRandomState, defaultMeanGauss, decayRate / 2 , this->seededTime);
+
 }
 
 
 std::string doomASCIIFire::getFrame() const
 {
-    const int frameSize = this->frameBufferSize * characterLength + this->frameBufferHeight;
+    const int frameSize = this->frameBufferSize * fixedCharacterLength + this->frameBufferHeight;
     std::shared_ptr<char[]> frame = std::make_shared<char[]>(frameSize);
 
-    // for (int i = 0; i < this->frameBufferSize; ++i)
-    tbb::parallel_for(static_cast<size_t>(0), static_cast<size_t>(this->frameBufferSize), [&](const size_t i)
+    tbb::parallel_for(
+        tbb::blocked_range<size_t>(0, this->frameBufferSize, 1024),
+        [&](const tbb::blocked_range<size_t>& range)
     {
-        const short intensity = this->frameBuffer[i / this->frameBufferWidth][i % this->frameBufferWidth];
+            for (int i = range.begin(); i != range.end(); ++i)
+            {
+                const short intensity = this->frameBuffer[i / this->frameBufferWidth][i % this->frameBufferWidth];
 
-        std::string colouredCharacter {};
+                std::string colouredCharacter {};
 
-        if (i % this->frameBufferWidth == 0)
-        {
-            colouredCharacter = this->getCharacter(intensity, true);
-        }
-        else
-        {
-            colouredCharacter = this->getCharacter(intensity);
-        }
+                if (i % this->frameBufferWidth == 0)
+                {
+                    colouredCharacter = this->getCharacter(intensity, true);
+                }
+                else
+                {
+                    colouredCharacter = this->getCharacter(intensity);
+                }
 
-        std::ranges::copy(colouredCharacter, &frame[i * characterLength]);
+                std::ranges::copy(colouredCharacter, &frame[i * fixedCharacterLength]);
+
+            }
     }
     );
 
     return frame.get();
 }
 
-std::string doomASCIIFire::getCharacter(const int intensity, bool newline) const
+inline std::string doomASCIIFire::getCharacter(const int intensity, bool newline) const
 {
     const char character = intensityToChar(intensity);
 
@@ -202,6 +243,7 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     , colour_band_multiplier { 1.0F }
     , backgroundMode(false)
     , frameDelay { defaultDelay }
+    , decayRate { height / 3 }
 {
     // Validate parameters
     if (width <= 0 || height <= 0)
@@ -234,6 +276,11 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     }
 
     this->initRandomFunctions();
+
+    for (int i = 0; i < this->frameBufferHeight; i++)
+    {
+        this->decayStep();
+    }
 }
 
 doomASCIIFire::~doomASCIIFire()
