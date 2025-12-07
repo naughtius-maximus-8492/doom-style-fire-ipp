@@ -46,6 +46,7 @@ void doomASCIIFire::decayStep() const
 
 void doomASCIIFire::openConfig()
 {
+#ifdef WIN32
     system("cls");
     std::cout << "ASCII Fire Configuration" << std::endl
             << "1) Set characters to use" << std::endl
@@ -54,10 +55,8 @@ void doomASCIIFire::openConfig()
     << "Live Configuration Binds:" << std::endl
     << "K/J    : Fire Height" << std::endl
     << "H/L    : Fire Temperature" << std::endl
-    << "F      : Characters On/Off" << std::endl
-    << "ESC    : Exit" << std::endl;
+    << "F      : Characters On/Off" << std::endl;
 
-#ifdef WIN32
 
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
@@ -89,10 +88,6 @@ void doomASCIIFire::openConfig()
         else if (detect_key_press('Q'))
         {
             exit = true;
-        }
-        if (detect_key_press(VK_ESCAPE))
-        {
-            this->running = false;
         }
     }
 #endif
@@ -204,11 +199,16 @@ float doomASCIIFire::normalise(const float value, const float min, const float m
 doomASCIIFire::doomASCIIFire(const int width, const int height)
     : characters { " .:*o|O0%&@#" }
     , seededTime { time(nullptr) }
-    , running(true)
     , colour_band_multiplier { 1.0F }
     , backgroundMode(false)
     , frameDelay { defaultDelay }
 {
+    // Validate parameters
+    if (width <= 0 || height <= 0)
+    {
+        throw std::invalid_argument("INVALID HEIGHT OR WIDTH: Must be greater than zero. Received arguments(" + std::to_string(height) + ", " + std::to_string(width) + ")");
+    }
+
     // Calculate buffer sizes
     this->frameBufferWidth = width;
     this->frameBufferHeight = height;
@@ -242,4 +242,11 @@ doomASCIIFire::~doomASCIIFire()
     ippsFree(this->uniformRandomBuffer);
     ippsFree(this->uniformRandomState);
     ippsFree(this->gaussianRandomState);
+
+    // for (int i = 0; i < this->frameBufferHeight; i++)
+    // {
+    //     ippsFree(this->frameBuffer[i]);
+    // }
+
+    delete[] this->frameBuffer;
 }

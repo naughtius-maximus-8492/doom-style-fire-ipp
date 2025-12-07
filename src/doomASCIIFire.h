@@ -24,6 +24,7 @@ constexpr int flicker = 4;
 class doomASCIIFire
 {
 private:
+     bool decayStepRunning;
      std::string characters;
      int frameBufferWidth;
      int frameBufferHeight;
@@ -47,7 +48,6 @@ private:
      time_t seededTime;
 
 public:
-     bool running;
      float colour_band_multiplier;
      bool backgroundMode;
      int frameDelay;

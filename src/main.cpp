@@ -40,7 +40,8 @@ int main()
     float colourBandMultiplier = 1.0F;
     auto last = std::chrono::steady_clock::now();
 
-    while (fire.running)
+    bool running = true;
+    while (running)
     {
         fire.decayStep();
         std::cout << "\033[H";
@@ -48,7 +49,7 @@ int main()
 
         while (std::chrono::steady_clock::now() - last < std::chrono::milliseconds(fire.frameDelay))
         {
-            std::this_thread::sleep_for(std::chrono::nanoseconds(100));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
 
         last = std::chrono::steady_clock::now();
@@ -88,7 +89,7 @@ int main()
         }
         if (detect_key_press(VK_ESCAPE))
         {
-            fire.running = false;
+            exit = true;
         }
 
         fire.colour_band_multiplier = colourBandMultiplier;
