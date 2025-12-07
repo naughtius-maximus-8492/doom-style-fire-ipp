@@ -107,9 +107,9 @@ void doomASCIIFire::updateDecayRate(short decayRate) const
 
 std::string doomASCIIFire::getFrame() const
 {
-    std::string frame = "\033[H";
-
-    frame.reserve(this->frameBufferSize * maxCharacterSize);
+    std::string oldFrame = "\033[H";
+    char* frame = new char[this->frameBufferSize * maxCharacterSize * sizeof(char)];
+    oldFrame.reserve(this->frameBufferSize * maxCharacterSize);
 
     for (int i = 0; i < this->frameBufferSize; ++i)
     // tbb::parallel_for(static_cast<size_t>(0), static_cast<size_t>(this->frameBufferHeight - 1), [&](const size_t i)
@@ -118,16 +118,21 @@ std::string doomASCIIFire::getFrame() const
 
         std::string colouredCharacter = this->getCharacter(intensity);
 
-        frame.append(colouredCharacter);
+        oldFrame.append(colouredCharacter);
+        // char* framePos = &frame[i * maxCharacterSize * sizeof(colouredCharacter)];
+        // std::ranges::copy(colouredCharacter, framePos);
 
         if (i % this->frameBufferWidth == 0)
         {
-            frame.append("\n");
+            oldFrame.append("\n");
         }
     }
     // );
 
-    return frame;
+    // std::string oldFrame = frame;
+
+    delete [] frame;
+    return oldFrame;
 }
 
 std::string doomASCIIFire::getCharacter(const int intensity) const
@@ -183,7 +188,7 @@ std::string doomASCIIFire::intensityToColour(const int intensity) const
         green = 0;
         red = maxColourVal * this->normalise(percentage, 0.0, colourBandTwo);
     }
-    return std::to_string(red) + ";" + std::to_string(green) + ";" + std::to_string(blue);
+    return std::format("{:03}",red) + ";" + std::format("{:03}", green) + ";" + std::format("{:03}", blue);
 }
 
 float doomASCIIFire::normalise(const float value, const float min, const float max)
