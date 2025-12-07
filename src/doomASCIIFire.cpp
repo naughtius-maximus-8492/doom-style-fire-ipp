@@ -21,23 +21,23 @@ void doomASCIIFire::decayStep() const
     // copy frames upwards
     for (int i = 0; i < this->frameBufferHeight - 1; ++i)
     {
-        Ipp16s* row = &frameBufferStart[i * frameBufferWidth];
-        const Ipp16s* rowBelow = &frameBufferStart[i * frameBufferWidth + frameBufferWidth];
+        Ipp16s* row = &frameBuffer[i * frameBufferWidth];
+        const Ipp16s* rowBelow = &frameBuffer[i * frameBufferWidth + frameBufferWidth];
 
         int fireOffset = std::uniform_int_distribution<int>(flicker * -1,flicker)(rng);
         ippsCopy_16s(rowBelow, &row[fireOffset], frameBufferWidth);
     }
     // Generate random distribution
     ippsRandUniform_16s(this->uniformRandomBuffer, this->frameBufferTopSize, uniformRandomState);
+    ippsSub_16s_I(this->uniformRandomBuffer, this->frameBuffer, this->frameBufferTopSize);
 
     // Generate gaussian distribution
     ippsRandGauss_16s(this->gaussianRandomBuffer, this->frameBufferTopSize, this->gaussianRandomState);
+    ippsSub_16s_I(this->gaussianRandomBuffer, this->frameBuffer, this->frameBufferTopSize);
 
     // subtract random distribution buffer from copied row to simulate fire decay
-    ippsSub_16s_I(this->gaussianRandomBuffer, this->frameBufferStart, this->frameBufferTopSize);
-    ippsSub_16s_I(this->uniformRandomBuffer, this->frameBufferStart, this->frameBufferTopSize);
-    ippsThreshold_LT_16s_I(this->frameBufferStart, this->frameBufferSize, minIntensity);
-    ippsThreshold_GT_16s_I(this->frameBufferStart, this->frameBufferSize, maxIntensity);
+    ippsThreshold_LT_16s_I(this->frameBuffer, this->frameBufferSize, minIntensity);
+    ippsThreshold_GT_16s_I(this->frameBuffer, this->frameBufferSize, maxIntensity);
 }
 
 void doomASCIIFire::openConfig()
@@ -105,11 +105,11 @@ std::string doomASCIIFire::getFrame() const
 {
     std::string frame = "\033[H";
 
-    frame.reserve((this->frameBufferSize + frameBufferPadding * 2) * maxCharacterSize);
+    frame.reserve(this->frameBufferSize * maxCharacterSize);
 
-    for (int i = 0; i < frameBufferSize; ++i)
+    for (int i = 0; i < this->frameBufferSize; ++i)
     {
-        const short intensity = this->frameBufferStart[i];
+        const short intensity = this->frameBuffer[i];
 
         std::string colouredCharacter = this->getCharacter(intensity);
 
@@ -198,19 +198,16 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     this->frameBufferWidth = width;
     this->frameBufferHeight = height;
     this->frameBufferSize = width * height;
-    this->frameBufferPadding = height * flicker;
-    this->frameBufferFullSize = this->frameBufferSize + (this->frameBufferPadding * 2);
     this->frameBufferTopSize = this->frameBufferSize - width;
 
     // Allocate memory to buffers
-    frameBuffer = ippsMalloc_16s(frameBufferFullSize);
-    this->frameBufferStart = &this->frameBuffer[this->frameBufferPadding];
+    frameBuffer = ippsMalloc_16s(this->frameBufferSize);
     uniformRandomBuffer = ippsMalloc_16s(this->frameBufferSize);
     gaussianRandomBuffer = ippsMalloc_16s(this->frameBufferSize);
 
     // Set default values
-    ippsSet_16s(0, this->frameBufferStart, this->frameBufferFullSize);
-    Ipp16s* lastRow = &this->frameBufferStart[this->frameBufferTopSize];
+    ippsSet_16s(0, this->frameBuffer, this->frameBufferSize);
+    Ipp16s* lastRow = &this->frameBuffer[this->frameBufferTopSize];
     ippsSet_16s(maxIntensity, lastRow, this->frameBufferWidth);
 
     this->initRandomFunctions();

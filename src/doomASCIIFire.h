@@ -19,7 +19,7 @@ constexpr int defaultStandardDeviationGauss = 25;
 constexpr unsigned int defaultDelay = 62;
 constexpr unsigned int maxCharacterSize = 52;
 
-constexpr int flicker = 0;
+constexpr int flicker = 2;
 
 class doomASCIIFire
 {
@@ -28,11 +28,11 @@ private:
      int frameBufferWidth;
      int frameBufferHeight;
      int frameBufferSize;
-     int frameBufferFullSize;
+     // int frameBufferFullSize;
      int frameBufferTopSize;
 
-     int frameBufferPadding;
-     Ipp16s* frameBufferStart;
+     // int frameBufferPadding;
+     // Ipp16s* frameBufferStart;
      Ipp16s* frameBuffer;
      Ipp16s* uniformRandomBuffer;
      Ipp16s* gaussianRandomBuffer;
