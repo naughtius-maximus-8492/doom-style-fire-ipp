@@ -62,11 +62,11 @@ int main()
         {
             fire->updateDecayRate(true);
         }
-        if (detect_key_press(VK_RIGHT))
+        if (detect_key_press('D'))
         {
             fire->colour_band_multiplier -= 0.02;
         }
-        if (detect_key_press(VK_LEFT))
+        if (detect_key_press('A'))
         {
             fire->colour_band_multiplier += 0.02;
         }
@@ -75,7 +75,7 @@ int main()
             fire->backgroundMode =  !fire->backgroundMode;
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
-        if (detect_key_press('D'))
+        if (detect_key_press('S'))
         {
             fire->frameDelay++;
             if (fire->frameDelay >= 1000)
@@ -83,12 +83,28 @@ int main()
                 fire->frameDelay = 100;
             }
         }
-        if (detect_key_press('A'))
+        if (detect_key_press('W'))
         {
             fire->frameDelay--;
             if (fire->frameDelay <= 0)
             {
                 fire->frameDelay = 0;
+            }
+        }
+        if (detect_key_press(VK_RIGHT))
+        {
+            fire->flicker++;
+            if (fire->flicker > width / 3)
+            {
+                fire->flicker = width / 3;
+            }
+        }
+        if (detect_key_press(VK_LEFT))
+        {
+            fire->flicker--;
+            if (fire->flicker <= 0)
+            {
+                fire->flicker = 0;
             }
         }
         if (detect_key_press(VK_ESCAPE))

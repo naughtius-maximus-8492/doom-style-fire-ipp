@@ -75,13 +75,16 @@ void doomASCIIFire::openConfig()
             << "1) Set characters to use" << std::endl
             << "Q) Back to fire" << std::endl << std::endl
     << "Live Configuration Binds:" << std::endl
-    << "K/J    : Fire Height" << std::endl
-    << "H/L    : Fire Temperature" << std::endl
-    << "F      : Characters On/Off" << std::endl << std::endl
+    << "UP/DOWN     : Fire Height" << std::endl
+    << "LEFT/RIGHT  : Flicker Intensity" << std::endl
+    << "A/D         : Fire Temperature" << std::endl
+    << "W/S         : Frame Delay (FPS)" << std::endl
+    << "F           : Background mode" << std::endl
+    << "ESC         : Quit" << std::endl << std::endl
     << "Statistics:" << std::endl
     << "Frame buffer height : " << this->frameBufferHeight << std::endl
     << "Frame buffer width  : " << this->frameBufferWidth << std::endl
-    << "Frame delay         : " << this->frameDelay << "ms (" << (1.0F / (float)this->frameDelay) * 1000 << " FPS)" << std::endl;
+    << "Frame delay         : " << this->frameDelay << "ms (" << (1.0F / static_cast<float>(this->frameDelay)) * 1000 << " FPS)" << std::endl;
 
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
@@ -244,6 +247,7 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     , colour_band_multiplier { 1.0F }
     , backgroundMode(false)
     , frameDelay { defaultDelay }
+    , flicker { 4 }
 {
     if (decayRate < 1)
     {
