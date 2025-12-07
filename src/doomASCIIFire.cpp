@@ -144,11 +144,8 @@ void doomASCIIFire::updateDecayRate(bool increment)
 }
 
 
-std::string doomASCIIFire::getFrame() const
+void doomASCIIFire::updateFrame() const
 {
-    const int frameSize = this->frameBufferSize * fixedCharacterLength + this->frameBufferHeight;
-    std::shared_ptr<char[]> frame = std::make_shared<char[]>(frameSize);
-
     tbb::parallel_for(
         tbb::blocked_range<size_t>(0, this->frameBufferSize, 1024),
         [&](const tbb::blocked_range<size_t>& range)
@@ -156,6 +153,7 @@ std::string doomASCIIFire::getFrame() const
             for (int i = range.begin(); i != range.end(); ++i)
             {
                 const short intensity = this->frameBuffer[i / this->frameBufferWidth][i % this->frameBufferWidth];
+                char* frameBufPos = &this->charFrameBuffer[i * fixedCharacterLength + 3];
 
                 std::string colouredCharacter {};
 
@@ -168,13 +166,11 @@ std::string doomASCIIFire::getFrame() const
                     colouredCharacter = this->getCharacter(intensity);
                 }
 
-                std::ranges::copy(colouredCharacter, &frame[i * fixedCharacterLength]);
+                std::memcpy(frameBufPos, colouredCharacter.data(), fixedCharacterLength);
 
             }
     }
     );
-
-    return frame.get();
 }
 
 inline std::string doomASCIIFire::getCharacter(const int intensity, bool newline) const
@@ -287,6 +283,12 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
         }
     }
 
+    const int frameSize = this->frameBufferSize * fixedCharacterLength + this->frameBufferHeight + 3;
+    this->charFrameBuffer = new char[frameSize];
+    this->charFrameBuffer[0] = '\033';
+    this->charFrameBuffer[1] = '[';
+    this->charFrameBuffer[2] = 'H';
+
     this->initRandomFunctions();
 
     for (int i = 0; i < this->frameBufferHeight; i++)
@@ -303,4 +305,5 @@ doomASCIIFire::~doomASCIIFire()
     ippsFree(this->gaussianRandomState);
 
     delete[] this->frameBuffer;
+    delete[] this->charFrameBuffer;
 }

@@ -8,6 +8,9 @@
 
 int main()
 {
+
+    std::cout << "\033[?25l";  // hide cursor
+
     int width {};
     int height {};
 
@@ -26,11 +29,14 @@ int main()
 
     int oldHeight = height;
     int oldWidth = width;
+
     bool running = true;
     while (running)
     {
         fire->decayStep();
-        std::string frame = "\033[H" + fire->getFrame();
+        fire->updateFrame();
+
+        std::string frame {};
 
         while (std::chrono::steady_clock::now() - last < std::chrono::milliseconds(fire->frameDelay) || fire->frameDelay > defaultDelay)
         {
@@ -39,8 +45,7 @@ int main()
 
         last = std::chrono::steady_clock::now();
 
-        printFrameFast(frame);
-        fire->decayStep();
+        printFrameFast(fire->charFrameBuffer);
 
 #ifdef WIN32
 
@@ -98,6 +103,8 @@ int main()
     delete fire;
 
     clearScreen();
+
+    std::cout << "\033[?25h";  // show cursor
 
     return 0;
 }

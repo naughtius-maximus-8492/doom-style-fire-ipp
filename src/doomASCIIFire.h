@@ -46,6 +46,7 @@ private:
      time_t seededTime;
 
 public:
+     char* charFrameBuffer;
      float colour_band_multiplier;
      bool backgroundMode;
      int frameDelay;
@@ -53,7 +54,7 @@ public:
      doomASCIIFire(int width, int height);
      ~doomASCIIFire();
 
-     std::string getFrame() const;
+     void updateFrame() const;
 
      void decayStep() const;
 
