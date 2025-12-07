@@ -42,7 +42,17 @@ int main()
 
     while (fire.running)
     {
-        printFrameFast(fire.getFrame());
+        fire.decayStep();
+        std::string frame = fire.getFrame();
+
+        while (std::chrono::steady_clock::now() - last < std::chrono::milliseconds(fire.frameDelay))
+        {
+            std::this_thread::sleep_for(std::chrono::nanoseconds(100));
+        }
+
+        last = std::chrono::steady_clock::now();
+
+        printFrameFast(frame);
         fire.decayStep();
 
 #ifdef WIN32
@@ -83,12 +93,6 @@ int main()
         fire.colour_band_multiplier = colourBandMultiplier;
 #endif
 
-        while (std::chrono::steady_clock::now() - last < std::chrono::milliseconds(fire.frameDelay))
-        {
-            std::this_thread::sleep_for(std::chrono::nanoseconds(100));
-        }
-
-        last = std::chrono::steady_clock::now();
     }
     return 0;
 }
