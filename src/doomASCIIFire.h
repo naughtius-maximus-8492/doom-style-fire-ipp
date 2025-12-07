@@ -6,7 +6,7 @@
 #include <thread>
 #include <iostream>
 #include <random>
-#include "inputUtils.h"
+#include "utils.h"
 
 constexpr unsigned int minIntensity = 0;
 constexpr unsigned int maxIntensity = 762;
@@ -19,19 +19,19 @@ constexpr int defaultStandardDeviationGauss = 25;
 constexpr unsigned int defaultDelay = 62;
 constexpr unsigned int maxCharacterSize = 52;
 
-constexpr int flicker = 4;
+constexpr int flicker = 0;
 
 class doomASCIIFire
 {
 private:
      std::string characters;
-     unsigned int frameBufferWidth;
-     unsigned int frameBufferHeight;
+     int frameBufferWidth;
+     int frameBufferHeight;
      int frameBufferSize;
      int frameBufferFullSize;
      int frameBufferTopSize;
 
-     unsigned int frameBufferPadding;
+     int frameBufferPadding;
      Ipp16s* frameBufferStart;
      Ipp16s* frameBuffer;
      Ipp16s* uniformRandomBuffer;
@@ -48,10 +48,6 @@ private:
      static float normalise(float value, float min, float max);
 
      time_t seededTime;
-
-     void calculateBufferSizes(int width, int height);
-     void allocBuffers();
-     void freeBuffers() const;
 
 public:
      bool running;

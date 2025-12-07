@@ -19,7 +19,7 @@ void doomASCIIFire::decayStep() const
 {
     std::mt19937 rng(std::random_device{}());
     // copy frames upwards
-    for (unsigned int i = 0; i < frameBufferHeight - 1; ++i)
+    for (int i = 0; i < this->frameBufferHeight - 1; ++i)
     {
         Ipp16s* row = &frameBufferStart[i * frameBufferWidth];
         const Ipp16s* rowBelow = &frameBufferStart[i * frameBufferWidth + frameBufferWidth];
@@ -186,31 +186,6 @@ float doomASCIIFire::normalise(const float value, const float min, const float m
     return std::clamp(normalised, 0.0F, 1.0F);
 }
 
-void doomASCIIFire::calculateBufferSizes(int width, int height)
-{
-    this->frameBufferWidth = width;
-    this->frameBufferHeight = height;
-    this->frameBufferSize = width * height;
-    this->frameBufferPadding = height * flicker;
-    this->frameBufferFullSize = this->frameBufferSize + (this->frameBufferPadding * 2);
-    this->frameBufferTopSize = this->frameBufferSize - width;
-}
-
-void doomASCIIFire::allocBuffers()
-{
-    frameBuffer = ippsMalloc_16s(frameBufferFullSize);
-    uniformRandomBuffer = ippsMalloc_16s(this->frameBufferSize);
-    gaussianRandomBuffer = ippsMalloc_16s(this->frameBufferSize);
-
-    // I do not know why but getFrame() fails if the below line isn't here specifically
-    this->frameBufferStart = &this->frameBuffer[this->frameBufferPadding];
-
-    // Set default values
-    ippsSet_16s(0, this->frameBufferStart, this->frameBufferFullSize);
-    Ipp16s* lastRow = &this->frameBufferStart[this->frameBufferTopSize];
-    ippsSet_16s(maxIntensity, lastRow, this->frameBufferWidth);
-}
-
 doomASCIIFire::doomASCIIFire(const int width, const int height)
     : characters { " .:*o|O0%&@#" }
     , seededTime { time(nullptr) }
@@ -219,10 +194,26 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     , backgroundMode(false)
     , frameDelay { defaultDelay }
 {
-    this->calculateBufferSizes(width, height);
-    this->allocBuffers();
-    this->initRandomFunctions();
+    // Calculate buffer sizes
+    this->frameBufferWidth = width;
+    this->frameBufferHeight = height;
+    this->frameBufferSize = width * height;
+    this->frameBufferPadding = height * flicker;
+    this->frameBufferFullSize = this->frameBufferSize + (this->frameBufferPadding * 2);
+    this->frameBufferTopSize = this->frameBufferSize - width;
 
+    // Allocate memory to buffers
+    frameBuffer = ippsMalloc_16s(frameBufferFullSize);
+    this->frameBufferStart = &this->frameBuffer[this->frameBufferPadding];
+    uniformRandomBuffer = ippsMalloc_16s(this->frameBufferSize);
+    gaussianRandomBuffer = ippsMalloc_16s(this->frameBufferSize);
+
+    // Set default values
+    ippsSet_16s(0, this->frameBufferStart, this->frameBufferFullSize);
+    Ipp16s* lastRow = &this->frameBufferStart[this->frameBufferTopSize];
+    ippsSet_16s(maxIntensity, lastRow, this->frameBufferWidth);
+
+    this->initRandomFunctions();
 }
 
 doomASCIIFire::~doomASCIIFire()

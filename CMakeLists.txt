@@ -25,16 +25,20 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(Catch2)
 
-add_executable(doomAsciiFire
+set(SOURCES
         src/main.cpp
         src/doomASCIIFire.h
         src/doomASCIIFire.cpp
+        src/utils.h
+)
+
+add_executable(doomAsciiFire
+        ${SOURCES}
 )
 
 add_executable(benchmarks
+        ${SOURCES}
         benchmarks.cpp
-        src/doomASCIIFire.cpp
-        src/doomASCIIFire.h
 )
 
 target_link_libraries(doomAsciiFire PRIVATE

@@ -42,7 +42,7 @@ int main()
 
     while (fire.running)
     {
-        std::cout << fire.getFrame();
+        printFrameFast(fire.getFrame());
         fire.decayStep();
 
 #ifdef WIN32
