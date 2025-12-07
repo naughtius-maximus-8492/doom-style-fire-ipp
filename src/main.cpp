@@ -36,7 +36,7 @@ int main()
 
     doomASCIIFire fire(width, height);
 
-    short decayRate = 90;
+    short decayRate = 75;
     float colourBandMultiplier = 1.0F;
     auto last = std::chrono::steady_clock::now();
 

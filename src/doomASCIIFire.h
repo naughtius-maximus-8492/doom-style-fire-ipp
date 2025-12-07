@@ -28,12 +28,11 @@ private:
      int frameBufferWidth;
      int frameBufferHeight;
      int frameBufferSize;
-     // int frameBufferFullSize;
-     int frameBufferTopSize;
+     // int frameBufferTopSize;
 
-     // int frameBufferPadding;
-     // Ipp16s* frameBufferStart;
-     Ipp16s* frameBuffer;
+     Ipp16s** frameBuffer;
+
+     // Ipp16s* oldFrameBuffer;
      Ipp16s* uniformRandomBuffer;
      Ipp16s* gaussianRandomBuffer;
      IppsRandUniState_16s* uniformRandomState;
