@@ -27,7 +27,7 @@ void doomASCIIFire::decayStep() const
 
         // Offset copy and rotate end or start values to simulate flickering
         std::normal_distribution normal_distribution(0.0, static_cast<double>(flicker));
-        int fireOffset = normal_distribution(rng);
+        int fireOffset = static_cast<int>(normal_distribution(rng));
 
         const unsigned int positiveFireOffset = std::abs(fireOffset);
         Ipp16s* offsetBuffer = ippsMalloc_16s(fireOffset);
@@ -96,6 +96,7 @@ void doomASCIIFire::openConfig()
             << "Type characters to distribute as the temperature changes (low - high)" << std::endl
             << "> ";
 
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
             FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
             std::cin >> this->characters;
 
@@ -108,6 +109,7 @@ void doomASCIIFire::openConfig()
             std::cout << "CURRENT (ms): " << this->frameDelay << std::endl
             << "> ";
 
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
             FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
             std::cin >> this->frameDelay;
 
