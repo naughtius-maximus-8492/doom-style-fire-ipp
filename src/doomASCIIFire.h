@@ -17,7 +17,9 @@ constexpr int defaultMeanGauss = -5;
 constexpr unsigned int defaultDelay = 67;
 constexpr unsigned int fixedCharacterLength = 42;
 
-constexpr int flicker = 3;
+constexpr int flicker = 4;
+
+constexpr std::string defaultFlameGradient = " `'^x!|ioedO0&#";
 
 class doomASCIIFire
 {

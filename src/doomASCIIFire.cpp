@@ -26,7 +26,8 @@ void doomASCIIFire::decayStep() const
         Ipp16s* rowBelow = this->frameBuffer[i + 1];
 
         // Offset copy and rotate end or start values to simulate flickering
-        int fireOffset = std::uniform_int_distribution<int>(flicker * -1,flicker)(rng);
+        std::normal_distribution normal_distribution(0.0, static_cast<double>(flicker));
+        int fireOffset = normal_distribution(rng);
 
         const unsigned int positiveFireOffset = std::abs(fireOffset);
         Ipp16s* offsetBuffer = ippsMalloc_16s(fireOffset);
@@ -177,15 +178,21 @@ inline std::string doomASCIIFire::getCharacter(const int intensity, bool newline
 {
     const char character = intensityToChar(intensity);
 
-    float backgroundMultiplier = 0.1;
+    int backgroundIntensity {};
 
     if (backgroundMode)
     {
-        backgroundMultiplier = 1.0;
+        backgroundIntensity = intensity;
+    }
+    else
+    {
+        backgroundIntensity = std::clamp(static_cast<int>(intensity * 0.1),
+            static_cast<int>(minIntensity),
+            static_cast<int>(maxIntensity * 0.025));
     }
 
     const std::string rgbVal = intensityToColour(intensity);
-    const std::string rgbValBackground = intensityToColour(intensity * backgroundMultiplier);
+    const std::string rgbValBackground = intensityToColour(backgroundIntensity);
 
     if (newline)
     {
@@ -242,12 +249,12 @@ float doomASCIIFire::normalise(const float value, const float min, const float m
 }
 
 doomASCIIFire::doomASCIIFire(const int width, const int height)
-    : characters { " .:*o|O0%&@#" }
+    : decayRate { 65000 / height }
+    , characters { defaultFlameGradient }
     , seededTime { time(nullptr) }
     , colour_band_multiplier { 1.0F }
     , backgroundMode(false)
     , frameDelay { defaultDelay }
-    , decayRate { 65356 / height }
 {
     if (decayRate < 1)
     {
