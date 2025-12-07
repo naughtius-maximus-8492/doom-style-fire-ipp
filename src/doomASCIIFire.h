@@ -9,7 +9,7 @@
 #include "utils.h"
 
 constexpr unsigned int minIntensity = 0;
-constexpr unsigned int maxIntensity = 762;
+constexpr unsigned int maxIntensity = 16384;
 
 constexpr int defaultLowBoundUniform = 0;
 constexpr int defaultMeanGauss = -5;

@@ -23,6 +23,9 @@ inline void calculateHeightWidth(int* height, int* width)
 }
 
 #else
+#include <sys/ioctl.h>
+#include <unistd.h>
+
 
 // TODO Equivalent linux key detection
 

@@ -25,6 +25,7 @@ void doomASCIIFire::decayStep() const
         Ipp16s* row = this->frameBuffer[i];
         Ipp16s* rowBelow = this->frameBuffer[i + 1];
 
+        // Offset copy and rotate end or start values to simulate flickering
         int fireOffset = std::uniform_int_distribution<int>(flicker * -1,flicker)(rng);
 
         const unsigned int positiveFireOffset = std::abs(fireOffset);
@@ -46,6 +47,7 @@ void doomASCIIFire::decayStep() const
             ippsCopy_16s(&rowBelow[positiveFireOffset], row, this->frameBufferWidth - positiveFireOffset);
             ippsCopy_16s(offsetBuffer, &row[this->frameBufferWidth - positiveFireOffset], positiveFireOffset);
         }
+
         ippsFree(offsetBuffer);
 
         // Generate random distribution
@@ -123,12 +125,18 @@ void doomASCIIFire::updateDecayRate(bool increment)
 {
     if (increment)
     {
-        this->decayRate++;
+        this->decayRate += 100;
     }
     else
     {
-        this->decayRate--;
+        this->decayRate -= 100;
     }
+
+    if (this->decayRate < 2)
+    {
+        this->decayRate = 2;
+    }
+
 
     ippsRandUniformInit_16s(uniformRandomState, defaultLowBoundUniform, decayRate, this->seededTime);
     ippsRandGaussInit_16s(this->gaussianRandomState, defaultMeanGauss, decayRate / 2 , this->seededTime);
@@ -243,8 +251,12 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     , colour_band_multiplier { 1.0F }
     , backgroundMode(false)
     , frameDelay { defaultDelay }
-    , decayRate { height / 3 }
+    , decayRate { 65356 / height }
 {
+    if (decayRate < 1)
+    {
+        decayRate = 10;
+    }
     // Validate parameters
     if (width <= 0 || height <= 0)
     {
@@ -289,11 +301,6 @@ doomASCIIFire::~doomASCIIFire()
     ippsFree(this->uniformRandomBuffer);
     ippsFree(this->uniformRandomState);
     ippsFree(this->gaussianRandomState);
-
-    // for (int i = 0; i < this->frameBufferHeight; i++)
-    // {
-    //     ippsFree(this->frameBuffer[i]);
-    // }
 
     delete[] this->frameBuffer;
 }

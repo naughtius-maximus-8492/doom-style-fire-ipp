@@ -1,7 +1,4 @@
 #include <chrono>
-#include <iostream>
-#include <thread>
-#include <chrono>
 
 #ifdef WIN32
 #else
@@ -33,8 +30,7 @@ int main()
     while (running)
     {
         fire->decayStep();
-        std::cout << "\033[H";
-        std::string frame = fire->getFrame();
+        std::string frame = "\033[H" + fire->getFrame();
 
         while (std::chrono::steady_clock::now() - last < std::chrono::milliseconds(fire->frameDelay) || fire->frameDelay > defaultDelay)
         {
@@ -55,11 +51,11 @@ int main()
         }
         if (detect_key_press(VK_UP))
         {
-            fire->updateDecayRate(true);
+            fire->updateDecayRate(false);
         }
         if (detect_key_press(VK_DOWN))
         {
-            fire->updateDecayRate(false);
+            fire->updateDecayRate(true);
         }
         if (detect_key_press(VK_RIGHT))
         {
