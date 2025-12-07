@@ -6,27 +6,28 @@
 TEST_CASE("Benchmarks")
 {
 
-    std::array<int, 8> sizes = {64, 128, 256, 512, 1024, 2048, 4096, 8192};
-    for (const int size : sizes)
+    doomASCIIFire genericFire(256, 256);
+
+    std::array<int, 8> widths = {144, 360, 480, 720, 1080, 1440, 2160};
+    for (const int width : widths)
     {
-        const doomASCIIFire fire(size, size);
+        int height = width * (16.0F / 9.0F);
+        const doomASCIIFire tempFire(width, height);
 
-        BENCHMARK("Decay Step " + std::to_string(size) + "x" + std::to_string(size))
+        BENCHMARK("Decay Step " + std::to_string(height) + "x" + std::to_string(width))
         {
-            fire.decayStep();
+            tempFire.decayStep();
         };
 
-        BENCHMARK("Intensity to colour " + std::to_string(size) + "x" + std::to_string(size))
+        BENCHMARK("Get frame " + std::to_string(height) + "x" + std::to_string(width))
         {
-            for (int i = 0; i < size; i++)
-            {
-                fire.intensityToChar(254);
-            }
-        };
-
-        BENCHMARK("Get frame " + std::to_string(size) + "x" + std::to_string(size))
-        {
-            std::string frame = fire.getFrame();
+            std::string frame = tempFire.getFrame();
         };
     }
+
+    BENCHMARK("UpdateDecay Rate")
+    {
+        genericFire.updateDecayRate(100);
+    };
+
 }

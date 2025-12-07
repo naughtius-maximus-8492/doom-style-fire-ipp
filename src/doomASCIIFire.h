@@ -16,10 +16,10 @@ constexpr int defaultUpperBoundUniform = 75;
 constexpr int defaultMeanGauss = -5;
 constexpr int defaultStandardDeviationGauss = 25;
 
-constexpr unsigned int defaultDelay = 42;
+constexpr unsigned int defaultDelay = 62;
 constexpr unsigned int maxCharacterSize = 52;
 
-constexpr int flicker = 3;
+constexpr int flicker = 4;
 
 class doomASCIIFire
 {
@@ -29,7 +29,7 @@ private:
      unsigned int frameBufferHeight;
      int frameBufferSize;
      int frameBufferFullSize;
-     unsigned int frameBufferTopSize;
+     int frameBufferTopSize;
 
      unsigned int frameBufferPadding;
      Ipp16s* frameBufferStart;
@@ -41,26 +41,32 @@ private:
 
      void initRandomFunctions();
 
-public:
      char intensityToChar(int intensity) const;
      std::string intensityToColour(int intensity) const;
+     std::string getCharacter(int intensity) const;
 
      static float normalise(float value, float min, float max);
 
      time_t seededTime;
 
+     void calculateBufferSizes(int width, int height);
+     void allocBuffers();
+     void freeBuffers() const;
+
+public:
+     bool running;
+     float colour_band_multiplier;
+     bool backgroundMode;
+     int frameDelay;
+
      doomASCIIFire(int width, int height);
      ~doomASCIIFire();
 
      std::string getFrame() const;
-     std::string getCharacter(int intensity) const;
+
      void decayStep() const;
 
      void openConfig();
 
-     void updateDecayRate(int decayRate) const;
-
-     float colour_band_multiplier;
-     bool backgroundMode;
-     int frameDelay;
+     void updateDecayRate(short decayRate) const;
 };

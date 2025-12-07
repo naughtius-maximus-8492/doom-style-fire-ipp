@@ -19,7 +19,7 @@ void doomASCIIFire::decayStep() const
 {
     std::mt19937 rng(std::random_device{}());
     // copy frames upwards
-    for (int i = 0; i < frameBufferHeight - 1; ++i)
+    for (unsigned int i = 0; i < frameBufferHeight - 1; ++i)
     {
         Ipp16s* row = &frameBufferStart[i * frameBufferWidth];
         const Ipp16s* rowBelow = &frameBufferStart[i * frameBufferWidth + frameBufferWidth];
@@ -48,9 +48,12 @@ void doomASCIIFire::openConfig()
             << "2) Set update delay" << std::endl
             << "Q) Back to fire" << std::endl << std::endl
     << "Live Configuration Binds:" << std::endl
-    << "Up/Down    : Fire Height" << std::endl
-    << "Left/Right : Fire Temperature" << std::endl
-    << "F          : ASCII On/Off";
+    << "K/J    : Fire Height" << std::endl
+    << "H/L    : Fire Temperature" << std::endl
+    << "F      : Characters On/Off" << std::endl
+    << "ESC    : Exit" << std::endl;
+
+#ifdef WIN32
 
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
@@ -83,14 +86,20 @@ void doomASCIIFire::openConfig()
         {
             exit = true;
         }
+        if (detect_key_press(VK_ESCAPE))
+        {
+            this->running = false;
+        }
     }
+#endif
 }
 
-void doomASCIIFire::updateDecayRate(int decayRate) const
+void doomASCIIFire::updateDecayRate(short decayRate) const
 {
     ippsRandUniformInit_16s(uniformRandomState, defaultLowBoundUniform, decayRate, this->seededTime);
     ippsRandGaussInit_16s(this->gaussianRandomState, defaultMeanGauss, decayRate / 3 , this->seededTime);
 }
+
 
 std::string doomASCIIFire::getFrame() const
 {
@@ -177,33 +186,48 @@ float doomASCIIFire::normalise(const float value, const float min, const float m
     return std::clamp(normalised, 0.0F, 1.0F);
 }
 
-doomASCIIFire::doomASCIIFire(const int width, const int height)
-    : characters { " .:*o|O0%&@#" }
-    , frameBufferWidth(width)
-    , frameBufferHeight(height)
-    , frameBufferSize(width * height)
-    , frameBufferFullSize(this->frameBufferSize + height * flicker * 2)
-    , frameBufferTopSize(frameBufferSize - width)
-    , frameBufferPadding(height * flicker)
-    , frameBuffer { ippsMalloc_16s(frameBufferFullSize) }
-    , uniformRandomBuffer { ippsMalloc_16s(this->frameBufferSize) }
-    , gaussianRandomBuffer { ippsMalloc_16s(this->frameBufferSize) }
-    , seededTime { time(nullptr) }
-    , colour_band_multiplier { 1.0F }
-    , backgroundMode(false)
-    , frameDelay { 33 }
+void doomASCIIFire::calculateBufferSizes(int width, int height)
 {
-    this->frameBufferStart = &frameBuffer[frameBufferPadding];
-    ippsSet_16s(0, this->frameBuffer, this->frameBufferFullSize);
+    this->frameBufferWidth = width;
+    this->frameBufferHeight = height;
+    this->frameBufferSize = width * height;
+    this->frameBufferPadding = height * flicker;
+    this->frameBufferFullSize = this->frameBufferSize + (this->frameBufferPadding * 2);
+    this->frameBufferTopSize = this->frameBufferSize - width;
+}
+
+void doomASCIIFire::allocBuffers()
+{
+    frameBuffer = ippsMalloc_16s(frameBufferFullSize);
+    uniformRandomBuffer = ippsMalloc_16s(this->frameBufferSize);
+    gaussianRandomBuffer = ippsMalloc_16s(this->frameBufferSize);
+
+    // I do not know why but getFrame() fails if the below line isn't here specifically
+    this->frameBufferStart = &this->frameBuffer[this->frameBufferPadding];
+
+    // Set default values
+    ippsSet_16s(0, this->frameBufferStart, this->frameBufferFullSize);
     Ipp16s* lastRow = &this->frameBufferStart[this->frameBufferTopSize];
     ippsSet_16s(maxIntensity, lastRow, this->frameBufferWidth);
+}
 
+doomASCIIFire::doomASCIIFire(const int width, const int height)
+    : characters { " .:*o|O0%&@#" }
+    , seededTime { time(nullptr) }
+    , running(true)
+    , colour_band_multiplier { 1.0F }
+    , backgroundMode(false)
+    , frameDelay { defaultDelay }
+{
+    this->calculateBufferSizes(width, height);
+    this->allocBuffers();
     this->initRandomFunctions();
+
 }
 
 doomASCIIFire::~doomASCIIFire()
 {
-    //ippsFree(this->frameBuffer);
+    ippsFree(this->frameBuffer);
     ippsFree(this->uniformRandomBuffer);
     ippsFree(this->uniformRandomState);
     ippsFree(this->gaussianRandomBuffer);
