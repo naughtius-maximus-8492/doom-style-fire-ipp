@@ -73,7 +73,6 @@ void doomASCIIFire::openConfig()
     clearScreen();
     std::cout << "ASCII Fire Configuration" << std::endl
             << "1) Set characters to use" << std::endl
-            << "2) Set update delay" << std::endl
             << "Q) Back to fire" << std::endl << std::endl
     << "Live Configuration Binds:" << std::endl
     << "K/J    : Fire Height" << std::endl
@@ -81,7 +80,8 @@ void doomASCIIFire::openConfig()
     << "F      : Characters On/Off" << std::endl << std::endl
     << "Statistics:" << std::endl
     << "Frame buffer height : " << this->frameBufferHeight << std::endl
-    << "Frame buffer width  : " << this->frameBufferWidth << std::endl;
+    << "Frame buffer width  : " << this->frameBufferWidth << std::endl
+    << "Frame delay         : " << this->frameDelay << "ms (" << (1.0F / (float)this->frameDelay) * 1000 << " FPS)" << std::endl;
 
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
@@ -99,19 +99,6 @@ void doomASCIIFire::openConfig()
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
             std::cin >> this->characters;
-
-            this->openConfig();
-        }
-        else if (detect_key_press('2'))
-        {
-            clearScreen();
-
-            std::cout << "CURRENT (ms): " << this->frameDelay << std::endl
-            << "> ";
-
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
-            std::cin >> this->frameDelay;
 
             this->openConfig();
         }

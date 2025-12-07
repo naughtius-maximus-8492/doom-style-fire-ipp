@@ -38,7 +38,7 @@ int main()
 
         std::string frame {};
 
-        while (std::chrono::steady_clock::now() - last < std::chrono::milliseconds(fire->frameDelay) || fire->frameDelay > defaultDelay)
+        while (std::chrono::steady_clock::now() - last < std::chrono::milliseconds(fire->frameDelay))
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
@@ -75,10 +75,21 @@ int main()
             fire->backgroundMode =  !fire->backgroundMode;
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
-        if (detect_key_press('R'))
+        if (detect_key_press('D'))
         {
-            delete fire;
-            fire = new doomASCIIFire(width, height);
+            fire->frameDelay++;
+            if (fire->frameDelay >= 1000)
+            {
+                fire->frameDelay = 100;
+            }
+        }
+        if (detect_key_press('A'))
+        {
+            fire->frameDelay--;
+            if (fire->frameDelay <= 0)
+            {
+                fire->frameDelay = 0;
+            }
         }
         if (detect_key_press(VK_ESCAPE))
         {
