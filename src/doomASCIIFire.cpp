@@ -111,18 +111,21 @@ std::string doomASCIIFire::getFrame() const
 
     frame.reserve(this->frameBufferSize * maxCharacterSize);
 
-    for (int y = 0; y < this->frameBufferHeight; ++y)
+    for (int i = 0; i < this->frameBufferSize; ++i)
+    // tbb::parallel_for(static_cast<size_t>(0), static_cast<size_t>(this->frameBufferHeight - 1), [&](const size_t i)
     {
-        for (int x = 0; x < this->frameBufferWidth; ++x)
+        const short intensity = this->frameBuffer[i / this->frameBufferWidth][i % this->frameBufferWidth];
+
+        std::string colouredCharacter = this->getCharacter(intensity);
+
+        frame.append(colouredCharacter);
+
+        if (i % this->frameBufferWidth == 0)
         {
-            const short intensity = this->frameBuffer[y][x];
-
-            std::string colouredCharacter = this->getCharacter(intensity);
-
-            frame.append(colouredCharacter);
+            frame.append("\n");
         }
-        frame.append("\n");
     }
+    // );
 
     return frame;
 }
