@@ -19,7 +19,7 @@ constexpr unsigned int fixedCharacterLength = 42;
 
 constexpr int defaultFlicker = 4;
 
-constexpr std::string defaultFlameGradient = " `'^x!|ioedO0&#";
+constexpr const char *defaultFlameGradient = " `'^x!|ioedO0&#";
 
 class doomASCIIFire
 {
@@ -30,7 +30,7 @@ private:
      int frameBufferHeight;
      int frameBufferSize;
 
-     Ipp16s** frameBuffer;
+     Ipp16s* frameBuffer;
 
      Ipp16s* gaussRandomBuffer;
      Ipp16s* uniformRandomBuffer;
@@ -41,7 +41,7 @@ private:
 
      char intensityToChar(int intensity) const;
      std::string intensityToColour(int intensity) const;
-     inline std::string getCharacter(int intensity, bool newline = false) const;
+     void setCharacter(int intensity, char* frameBufPos, bool newline) const;
 
      static float normalise(float value, float min, float max);
 

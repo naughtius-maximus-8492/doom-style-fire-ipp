@@ -22,8 +22,8 @@ void doomASCIIFire::decayStep() const
     // copy frames upwards
     tbb::parallel_for(static_cast<size_t>(0), static_cast<size_t>(this->frameBufferHeight - 1), [&](const size_t i)
     {
-        Ipp16s* row = this->frameBuffer[i];
-        Ipp16s* rowBelow = this->frameBuffer[i + 1];
+        Ipp16s* row = &this->frameBuffer[i * this->frameBufferWidth];
+        Ipp16s* rowBelow = &row[this->frameBufferWidth];
 
         // Offset copy and rotate end or start values to simulate flickering
         std::normal_distribution normal_distribution(0.0, static_cast<double>(flicker));
@@ -145,31 +145,57 @@ void doomASCIIFire::updateFrame() const
     {
             for (int i = range.begin(); i != range.end(); ++i)
             {
-                const short intensity = this->frameBuffer[i / this->frameBufferWidth][i % this->frameBufferWidth];
+                const short intensity = this->frameBuffer[i];
                 char* frameBufPos = &this->charFrameBuffer[i * fixedCharacterLength + 3];
 
                 std::string colouredCharacter {};
 
+                bool newline = false;
                 if (i % this->frameBufferWidth == 0)
                 {
-                    colouredCharacter = this->getCharacter(intensity, true);
-                }
-                else
-                {
-                    colouredCharacter = this->getCharacter(intensity);
+                    newline = true;
                 }
 
-                std::memcpy(frameBufPos, colouredCharacter.data(), fixedCharacterLength);
+                this->setCharacter(intensity, frameBufPos, newline);
+                // std::memcpy(frameBufPos, colouredCharacter.data(), fixedCharacterLength);
 
             }
     }
     );
 }
 
-inline std::string doomASCIIFire::getCharacter(const int intensity, bool newline) const
+        //  "\033[38;2;" + rgbVal + ";48;2;" + rgbValBackground + "m" + character + "\033[0m\n";
+void doomASCIIFire::setCharacter(const int intensity, char* frameBufPos, bool newline) const
 {
-    const char character = intensityToChar(intensity);
+    int position = 0;
 
+    // Assign starting values
+    frameBufPos[position++] = '\033';
+    frameBufPos[position++] = '[';
+    if (newline)
+    {
+        frameBufPos[position++] = '0';
+    }
+    frameBufPos[position++] = '3';
+    frameBufPos[position++] = '8';
+    frameBufPos[position++] = ';';
+    frameBufPos[position++] = '2';
+    frameBufPos[position++] = ';';
+
+    // Assign char rgb value
+    const std::string rgbVal = intensityToColour(intensity);
+    std::memcpy(&frameBufPos[position], rgbVal.data(), rgbVal.size());
+    position += rgbVal.size();
+
+    // Assign bg rgb val identifier
+    frameBufPos[position++] = ';';
+    frameBufPos[position++] = '4';
+    frameBufPos[position++] = '8';
+    frameBufPos[position++] = ';';
+    frameBufPos[position++] = '2';
+    frameBufPos[position++] = ';';
+
+    // Assign bg rgb value
     int backgroundIntensity {};
 
     if (backgroundMode)
@@ -183,18 +209,29 @@ inline std::string doomASCIIFire::getCharacter(const int intensity, bool newline
             static_cast<int>(maxIntensity * 0.025));
     }
 
-    const std::string rgbVal = intensityToColour(intensity);
     const std::string rgbValBackground = intensityToColour(backgroundIntensity);
+    std::memcpy(&frameBufPos[position], rgbValBackground.data(), rgbValBackground.size());
+    position += rgbValBackground.size();
 
+    frameBufPos[position++] = 'm';
+    frameBufPos[position++] = this->intensityToChar(intensity);
+    frameBufPos[position++] = '\033';
+    frameBufPos[position++] = '[';
+    frameBufPos[position++] = '0';
+    frameBufPos[position++] = 'm';
     if (newline)
     {
-        return "\033[38;2;" + rgbVal + ";48;2;" + rgbValBackground + "m" + character + "\033[0m\n";
-    }
-    else
-    {
-        return "\033[038;2;" + rgbVal + ";48;2;" + rgbValBackground + "m" + character + "\033[0m";
+        frameBufPos[position++] = '\n';
     }
 
+    // if (newline)
+    // {
+    //     return "\033[38;2;" + rgbVal + ";48;2;" + rgbValBackground + "m" + character + "\033[0m\n";
+    // }
+    // else
+    // {
+    //     return "\033[038;2;" + rgbVal + ";48;2;" + rgbValBackground + "m" + character + "\033[0m";
+    // }
 }
 
 char doomASCIIFire::intensityToChar(const int intensity) const
@@ -268,20 +305,10 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     this->gaussRandomBuffer = ippsMalloc_16s(this->frameBufferSize);
     this->uniformRandomBuffer = ippsMalloc_16s(this->frameBufferSize);
 
-    this->frameBuffer = new Ipp16s*[this->frameBufferHeight];
-    for (int i = 0; i < this->frameBufferHeight; i++)
-    {
-        this->frameBuffer[i] = ippsMalloc_16s(this->frameBufferWidth);
-
-        if (i < this->frameBufferHeight - 1)
-        {
-            ippsSet_16s(0, this->frameBuffer[i], this->frameBufferWidth);
-        }
-        else
-        {
-            ippsSet_16s(maxIntensity, this->frameBuffer[i], this->frameBufferWidth);
-        }
-    }
+    // this->frameBuffer = new Ipp16s*[this->frameBufferHeight];
+    this->frameBuffer = ippsMalloc_16s(this->frameBufferSize);
+    ippsSet_16s(minIntensity, this->frameBuffer, this->frameBufferSize - this->frameBufferWidth);
+    ippsSet_16s(maxIntensity, &this->frameBuffer[this->frameBufferSize - this->frameBufferWidth], this->frameBufferWidth);
 
     const int frameSize = this->frameBufferSize * fixedCharacterLength + this->frameBufferHeight + 3;
     this->charFrameBuffer = new char[frameSize];
@@ -304,6 +331,5 @@ doomASCIIFire::~doomASCIIFire()
     ippsFree(this->uniformRandomState);
     ippsFree(this->gaussianRandomState);
 
-    delete[] this->frameBuffer;
     delete[] this->charFrameBuffer;
 }
