@@ -45,7 +45,7 @@ int main()
 
         last = std::chrono::steady_clock::now();
 
-        printFrameFast(fire->charFrameBuffer, fire->frameBufferSize);
+        printFrameFast(fire->charFrameBuffer, fire->charFrameBufferSize);
 
 #ifdef WIN32
 

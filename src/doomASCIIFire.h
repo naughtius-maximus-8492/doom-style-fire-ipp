@@ -50,6 +50,7 @@ private:
 
 public:
      char* charFrameBuffer;
+     int charFrameBufferSize;
      int frameBufferSize;
      float colour_band_multiplier;
      bool backgroundMode;

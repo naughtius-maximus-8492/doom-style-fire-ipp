@@ -323,8 +323,8 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     ippsSet_16s(minIntensity, this->frameBuffer, this->frameBufferSize - this->frameBufferWidth);
     ippsSet_16s(maxIntensity, &this->frameBuffer[this->frameBufferSize - this->frameBufferWidth], this->frameBufferWidth);
 
-    const int frameSize = this->frameBufferSize * fixedCharacterLength + this->frameBufferHeight + 3;
-    this->charFrameBuffer = new char[frameSize];
+    this->charFrameBufferSize = this->frameBufferSize * fixedCharacterLength + this->frameBufferHeight + 3;
+    this->charFrameBuffer = new char[charFrameBufferSize];
     this->charFrameBuffer[0] = '\033';
     this->charFrameBuffer[1] = '[';
     this->charFrameBuffer[2] = 'H';
