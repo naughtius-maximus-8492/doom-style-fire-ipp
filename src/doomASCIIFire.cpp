@@ -200,52 +200,24 @@ void doomASCIIFire::setCharacter(const int intensity, char* frameBufPos, bool ne
     frameBufPos[position] = this->intensityToChar(intensity);
 }
 
-void doomASCIIFire::initConstantChars(char* frameBufPos, bool newline)
+void doomASCIIFire::initConstantChars(char* frameBufPos, const bool newline)
 {
-    int intensity = 0;
-    int position = 0;
+    std::string asciiEscapeCode {};
 
-    // Assign starting values
-    frameBufPos[position++] = '\033';
-    frameBufPos[position++] = '[';
-    if (!newline)
-    {
-        frameBufPos[position++] = '0';
-    }
-    frameBufPos[position++] = '3';
-    frameBufPos[position++] = '8';
-    frameBufPos[position++] = ';';
-    frameBufPos[position++] = '2';
-    frameBufPos[position++] = ';';
-
-    // Assign char rgb value
-    const std::string rgbVal = intensityToColour(intensity);
-    std::memcpy(&frameBufPos[position], rgbVal.data(), rgbVal.size());
-    position += rgbVal.size();
-
-    // Assign bg rgb val identifier
-    frameBufPos[position++] = ';';
-    frameBufPos[position++] = '4';
-    frameBufPos[position++] = '8';
-    frameBufPos[position++] = ';';
-    frameBufPos[position++] = '2';
-    frameBufPos[position++] = ';';
-
-    // Assign bg rgb value
-    int backgroundIntensity {};
-    const std::string rgbValBackground = intensityToColour(backgroundIntensity);
-    std::memcpy(&frameBufPos[position], rgbValBackground.data(), rgbValBackground.size());
-    position += rgbValBackground.size();
-
-    frameBufPos[position++] = 'm';
-    frameBufPos[position++] = this->intensityToChar(intensity);
-    frameBufPos[position++] = '\033';
-    frameBufPos[position++] = '[';
-    frameBufPos[position++] = '0';
-    frameBufPos[position++] = 'm';
     if (newline)
     {
-        frameBufPos[position++] = '\n';
+        asciiEscapeCode = "\033[38;2;000;000;000;48;2;000;000;000m \033[0m\n";
+    }
+    else
+    {
+        asciiEscapeCode = "\033[038;2;000;000;000;48;2;000;000;000m \033[0m";
+    }
+
+    int position = 0;
+    for (const char character : asciiEscapeCode)
+    {
+        frameBufPos[position++] = character;
+
     }
 }
 
@@ -255,38 +227,7 @@ char doomASCIIFire::intensityToChar(const int intensity) const
     return this->characters[index];
 }
 
-std::string doomASCIIFire::intensityToColour(const int intensity) const
-{
-    constexpr unsigned short maxColourVal = 254;
-    int red = maxColourVal;
-    int green = maxColourVal;
-    int blue {};
-
-    // work out percentage to absolute zero
-    const float percentage = static_cast<float>(intensity) / static_cast<float>(maxIntensity);
-
-    const float colourBandOne = 0.8 * colour_band_multiplier;
-    const float colourBandTwo = 0.2 * colour_band_multiplier;
-
-    if (percentage >= colourBandOne) // white to yellow
-    {
-        blue = maxColourVal * this->normalise(percentage, colourBandOne, 1.0);
-    }
-    else if (percentage >= colourBandTwo) // yellow to red
-    {
-        blue = 0;
-        green = maxColourVal * this->normalise(percentage, colourBandTwo, colourBandOne) ;
-    }
-    else // red to black
-    {
-        blue = 0;
-        green = 0;
-        red = maxColourVal * this->normalise(percentage, 0.0, colourBandTwo);
-    }
-    return std::format("{:03}",red) + ";" + std::format("{:03}", green) + ";" + std::format("{:03}", blue);
-}
-
-void doomASCIIFire::setRGBValues(int intensity, char *frameBufPos) const
+void doomASCIIFire::setRGBValues(const int intensity, char *frameBufPos) const
 {
     constexpr int maxColourVal = 254;
 
