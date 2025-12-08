@@ -25,10 +25,9 @@ inline void calculateHeightWidth(int* height, int* width)
 #else
 #include <sys/ioctl.h>
 #include <unistd.h>
-
+#include <iostream>
 
 // TODO Equivalent linux key detection
-
 inline void printFrameFast(const std::string& frame)
 {
     write(STDOUT_FILENO, frame.data(), frame.size());

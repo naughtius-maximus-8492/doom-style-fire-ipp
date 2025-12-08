@@ -5,12 +5,24 @@
 #endif
 
 #include "doomASCIIFire.h"
+#include <termios.h>
+#include <unistd.h>
+
+// Function to set terminal to raw mode
+void setRawMode(bool enable) {
+    static struct termios oldt, newt;
+    if (enable) {
+        tcgetattr(STDIN_FILENO, &oldt);  // Save old settings
+        newt = oldt;
+        newt.c_lflag &= ~(ICANON | ECHO);  // Disable canonical mode and echo
+        tcsetattr(STDIN_FILENO, TCSANOW, &newt);  // Apply new settings
+    } else {
+        tcsetattr(STDIN_FILENO, TCSANOW, &oldt);  // Restore old settings
+    }
+}
 
 int main()
 {
-
-    std::cout << "\033[?25l";  // hide cursor
-
     int width {};
     int height {};
 
@@ -132,6 +144,5 @@ int main()
     clearScreen();
 
     std::cout << "\033[?25h";  // show cursor
-
     return 0;
 }
