@@ -45,7 +45,7 @@ int main()
 
         last = std::chrono::steady_clock::now();
 
-        printFrameFast(fire->charFrameBuffer, fire->charFrameBufferSize);
+        printFrameFast(fire->startCharFrameBuffer, fire->charFrameBufferSize);
 
 #ifdef WIN32
 
@@ -64,11 +64,11 @@ int main()
         }
         if (detect_key_press('D'))
         {
-            fire->colour_band_multiplier -= 0.02;
+            fire->colourBandMultiplier -= 0.02;
         }
         if (detect_key_press('A'))
         {
-            fire->colour_band_multiplier += 0.02;
+            fire->colourBandMultiplier += 0.02;
         }
         if (detect_key_press('F'))
         {

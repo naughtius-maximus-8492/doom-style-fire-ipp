@@ -145,7 +145,7 @@ void doomASCIIFire::updateFrame() const
             for (int i = range.begin(); i != range.end(); ++i)
             {
                 const short intensity = this->frameBuffer[i];
-                char* frameBufPos = &this->charFrameBuffer[i * fixedCharacterLength + 3];
+                char* frameBufPos = &this->offsetCharFrameBuffer[i * fixedCharacterLength];
 
                 bool newline = false;
                 if (i % this->frameBufferWidth == 0)
@@ -159,26 +159,27 @@ void doomASCIIFire::updateFrame() const
     );
 }
 
-void doomASCIIFire::setCharacter(const int intensity, char* frameBufPos, bool newline) const
+void doomASCIIFire::setCharacter(const int intensity, char* frameBufPos, const bool newline) const
 {
-    int position {};
+    int position = 8;
 
+    // Increment position to next point in char array we need to modify
+    // Newlines discard a preceding 0 from part of the ANSII code and append a \n char on the end.
+    // This ensures the size of the ANSII code stays consistent.
     if (newline)
     {
         position = 7;
     }
-    else
-    {
-        position = 8;
-    }
 
     this->setRGBValues(intensity, &frameBufPos[position]);
-    position += 11 + 6;
+
+    // Increment position to next point in char array we need to modify
+    position += 17;
 
     // Assign bg rgb value
     int backgroundIntensity {};
 
-    if (backgroundMode)
+    if (this->backgroundMode)
     {
         backgroundIntensity = intensity;
     }
@@ -190,28 +191,29 @@ void doomASCIIFire::setCharacter(const int intensity, char* frameBufPos, bool ne
     }
 
     this->setRGBValues(backgroundIntensity, &frameBufPos[position]);
-    position += 11 + 1;
+
+    // Increment position to next point in char array we need to modify
+    position += 12;
+
     frameBufPos[position] = this->intensityToChar(intensity);
 }
 
 void doomASCIIFire::initConstantChars(char* frameBufPos, const bool newline)
 {
-    std::string asciiEscapeCode {};
+    std::string ansiiEscapeCode {};
 
     if (newline)
     {
-        asciiEscapeCode = "\033[38;2;000;000;000;48;2;000;000;000m \033[0m\n";
+        ansiiEscapeCode = "\033[38;2;000;000;000;48;2;000;000;000m \033[0m\n";
     }
     else
     {
-        asciiEscapeCode = "\033[038;2;000;000;000;48;2;000;000;000m \033[0m";
+        ansiiEscapeCode = "\033[038;2;000;000;000;48;2;000;000;000m \033[0m";
     }
 
-    int position = 0;
-    for (const char character : asciiEscapeCode)
+    for (int i = 0; i < ansiiEscapeCode.length(); ++i)
     {
-        frameBufPos[position++] = character;
-
+        frameBufPos[i] = ansiiEscapeCode[i];
     }
 }
 
@@ -230,8 +232,8 @@ void doomASCIIFire::setRGBValues(const int intensity, char *frameBufPos) const
     // work out percentage to absolute zero
     const float percentage = static_cast<float>(intensity) / static_cast<float>(maxIntensity);
 
-    const float colourBandOne = 0.8 * colour_band_multiplier;
-    const float colourBandTwo = 0.2 * colour_band_multiplier;
+    const float colourBandOne = 0.8 * this->colourBandMultiplier;
+    const float colourBandTwo = 0.2 * this->colourBandMultiplier;
 
     if (percentage >= colourBandOne) // white to yellow
     {
@@ -275,7 +277,7 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     : decayRate { 65000 / height }
     , characters { defaultFlameGradient }
     , seededTime { time(nullptr) }
-    , colour_band_multiplier { 1.0F }
+    , colourBandMultiplier { 1.0F }
     , backgroundMode(false)
     , frameDelay { defaultDelay }
     , flicker { 4 }
@@ -304,17 +306,17 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     ippsSet_16s(maxIntensity, &this->frameBuffer[this->frameBufferSize - this->frameBufferWidth], this->frameBufferWidth);
 
     this->charFrameBufferSize = this->frameBufferSize * fixedCharacterLength + this->frameBufferHeight + 3;
-    this->charFrameBuffer = new char[charFrameBufferSize];
-    this->charFrameBuffer[0] = '\033';
-    this->charFrameBuffer[1] = '[';
-    this->charFrameBuffer[2] = 'H';
+    this->startCharFrameBuffer = new char[charFrameBufferSize];
+    this->startCharFrameBuffer[0] = '\033';
+    this->startCharFrameBuffer[1] = '[';
+    this->startCharFrameBuffer[2] = 'H';
+    this->offsetCharFrameBuffer = &this->startCharFrameBuffer[3];
 
     this->initRandomFunctions();
 
-
     for (int i = 0; i < this->frameBufferSize; ++i)
     {
-        char* frameBufPos = &this->charFrameBuffer[i * fixedCharacterLength + 3];
+        char* frameBufPos = &this->offsetCharFrameBuffer[i * fixedCharacterLength];
 
         bool newline = false;
         if (i % this->frameBufferWidth == 0)
@@ -338,5 +340,5 @@ doomASCIIFire::~doomASCIIFire()
     ippsFree(this->uniformRandomState);
     ippsFree(this->gaussianRandomState);
 
-    delete[] this->charFrameBuffer;
+    delete[] this->startCharFrameBuffer;
 }

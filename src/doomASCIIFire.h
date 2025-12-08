@@ -39,7 +39,6 @@ private:
      void initRandomFunctions();
 
      char intensityToChar(int intensity) const;
-     // std::string intensityToColour(int intensity) const;
      void setRGBValues(int intensity, char* frameBufPos) const;
      void setCharacter(int intensity, char* frameBufPos, bool newline) const;
 
@@ -49,11 +48,16 @@ private:
 
      time_t seededTime;
 
+     // used for internal calculation that don't want to in
+     char* offsetCharFrameBuffer;
+
+
 public:
-     char* charFrameBuffer;
+     // Used for getting the entire frame buffer
+     char* startCharFrameBuffer;
      int charFrameBufferSize;
      int frameBufferSize;
-     float colour_band_multiplier;
+     float colourBandMultiplier;
      bool backgroundMode;
      int frameDelay;
      int flicker;
