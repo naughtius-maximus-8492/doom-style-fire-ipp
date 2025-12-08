@@ -130,7 +130,6 @@ void doomASCIIFire::updateDecayRate(bool increment)
         this->decayRate = 2;
     }
 
-
     ippsRandUniformInit_16s(uniformRandomState, defaultLowBoundUniform, decayRate, this->seededTime);
     ippsRandGaussInit_16s(this->gaussianRandomState, defaultMeanGauss, decayRate / 2 , this->seededTime);
 
@@ -173,9 +172,6 @@ void doomASCIIFire::setCharacter(const int intensity, char* frameBufPos, bool ne
         position = 8;
     }
 
-    // Assign char rgb value
-    // const std::string rgbVal = intensityToColour(intensity);
-    // std::memcpy(&frameBufPos[position], rgbVal.data(), rgbVal.size());
     this->setRGBValues(intensity, &frameBufPos[position]);
     position += 11 + 6;
 
@@ -193,8 +189,6 @@ void doomASCIIFire::setCharacter(const int intensity, char* frameBufPos, bool ne
             static_cast<int>(maxIntensity * 0.025));
     }
 
-    // const std::string rgbValBackground = intensityToColour(backgroundIntensity);
-    // std::memcpy(&frameBufPos[position], rgbValBackground.data(), rgbValBackground.size());
     this->setRGBValues(backgroundIntensity, &frameBufPos[position]);
     position += 11 + 1;
     frameBufPos[position] = this->intensityToChar(intensity);
