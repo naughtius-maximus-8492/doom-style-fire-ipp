@@ -148,8 +148,6 @@ void doomASCIIFire::updateFrame() const
                 const short intensity = this->frameBuffer[i];
                 char* frameBufPos = &this->charFrameBuffer[i * fixedCharacterLength + 3];
 
-                std::string colouredCharacter {};
-
                 bool newline = false;
                 if (i % this->frameBufferWidth == 0)
                 {
@@ -157,22 +155,58 @@ void doomASCIIFire::updateFrame() const
                 }
 
                 this->setCharacter(intensity, frameBufPos, newline);
-                // std::memcpy(frameBufPos, colouredCharacter.data(), fixedCharacterLength);
-
             }
     }
     );
 }
 
-        //  "\033[38;2;" + rgbVal + ";48;2;" + rgbValBackground + "m" + character + "\033[0m\n";
 void doomASCIIFire::setCharacter(const int intensity, char* frameBufPos, bool newline) const
 {
+    int position {};
+
+    if (newline)
+    {
+        position = 7;
+    }
+    else
+    {
+        position = 8;
+    }
+
+    // Assign char rgb value
+    const std::string rgbVal = intensityToColour(intensity);
+    std::memcpy(&frameBufPos[position], rgbVal.data(), rgbVal.size());
+    position += rgbVal.size() + 6;
+
+    // Assign bg rgb value
+    int backgroundIntensity {};
+
+    if (backgroundMode)
+    {
+        backgroundIntensity = intensity;
+    }
+    else
+    {
+        backgroundIntensity = std::clamp(static_cast<int>(intensity * 0.1),
+            static_cast<int>(minIntensity),
+            static_cast<int>(maxIntensity * 0.025));
+    }
+
+    const std::string rgbValBackground = intensityToColour(backgroundIntensity);
+    std::memcpy(&frameBufPos[position], rgbValBackground.data(), rgbValBackground.size());
+    position += rgbValBackground.size() + 1;
+    frameBufPos[position] = this->intensityToChar(intensity);
+}
+
+void doomASCIIFire::initConstantChars(char* frameBufPos, bool newline)
+{
+    int intensity = 0;
     int position = 0;
 
     // Assign starting values
     frameBufPos[position++] = '\033';
     frameBufPos[position++] = '[';
-    if (newline)
+    if (!newline)
     {
         frameBufPos[position++] = '0';
     }
@@ -197,18 +231,6 @@ void doomASCIIFire::setCharacter(const int intensity, char* frameBufPos, bool ne
 
     // Assign bg rgb value
     int backgroundIntensity {};
-
-    if (backgroundMode)
-    {
-        backgroundIntensity = intensity;
-    }
-    else
-    {
-        backgroundIntensity = std::clamp(static_cast<int>(intensity * 0.1),
-            static_cast<int>(minIntensity),
-            static_cast<int>(maxIntensity * 0.025));
-    }
-
     const std::string rgbValBackground = intensityToColour(backgroundIntensity);
     std::memcpy(&frameBufPos[position], rgbValBackground.data(), rgbValBackground.size());
     position += rgbValBackground.size();
@@ -223,15 +245,6 @@ void doomASCIIFire::setCharacter(const int intensity, char* frameBufPos, bool ne
     {
         frameBufPos[position++] = '\n';
     }
-
-    // if (newline)
-    // {
-    //     return "\033[38;2;" + rgbVal + ";48;2;" + rgbValBackground + "m" + character + "\033[0m\n";
-    // }
-    // else
-    // {
-    //     return "\033[038;2;" + rgbVal + ";48;2;" + rgbValBackground + "m" + character + "\033[0m";
-    // }
 }
 
 char doomASCIIFire::intensityToChar(const int intensity) const
@@ -317,6 +330,20 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     this->charFrameBuffer[2] = 'H';
 
     this->initRandomFunctions();
+
+
+    for (int i = 0; i < this->frameBufferSize; ++i)
+    {
+        char* frameBufPos = &this->charFrameBuffer[i * fixedCharacterLength + 3];
+
+        bool newline = false;
+        if (i % this->frameBufferWidth == 0)
+        {
+            newline = true;
+        }
+
+        this->initConstantChars(frameBufPos, newline);
+    }
 
     for (int i = 0; i < this->frameBufferHeight; i++)
     {

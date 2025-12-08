@@ -28,7 +28,6 @@ private:
      std::string characters;
      int frameBufferWidth;
      int frameBufferHeight;
-     int frameBufferSize;
 
      Ipp16s* frameBuffer;
 
@@ -43,12 +42,15 @@ private:
      std::string intensityToColour(int intensity) const;
      void setCharacter(int intensity, char* frameBufPos, bool newline) const;
 
+     void initConstantChars(char* frameBufPos, bool newline);
+
      static float normalise(float value, float min, float max);
 
      time_t seededTime;
 
 public:
      char* charFrameBuffer;
+     int frameBufferSize;
      float colour_band_multiplier;
      bool backgroundMode;
      int frameDelay;

@@ -7,10 +7,10 @@ inline bool detect_key_press(const char code)
     return (GetAsyncKeyState(code) & 0x8000) != 0;
 }
 
-inline void printFrameFast(const std::string& frame)
+inline void printFrameFast(const char* frame, const int length)
 {
     DWORD written;
-    WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), frame.c_str(), frame.length(), &written, nullptr);
+    WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), frame, length, &written, nullptr);
 }
 
 inline void calculateHeightWidth(int* height, int* width)
