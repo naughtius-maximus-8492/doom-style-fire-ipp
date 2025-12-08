@@ -174,9 +174,10 @@ void doomASCIIFire::setCharacter(const int intensity, char* frameBufPos, bool ne
     }
 
     // Assign char rgb value
-    const std::string rgbVal = intensityToColour(intensity);
-    std::memcpy(&frameBufPos[position], rgbVal.data(), rgbVal.size());
-    position += rgbVal.size() + 6;
+    // const std::string rgbVal = intensityToColour(intensity);
+    // std::memcpy(&frameBufPos[position], rgbVal.data(), rgbVal.size());
+    this->setRGBValues(intensity, &frameBufPos[position]);
+    position += 11 + 6;
 
     // Assign bg rgb value
     int backgroundIntensity {};
@@ -192,9 +193,10 @@ void doomASCIIFire::setCharacter(const int intensity, char* frameBufPos, bool ne
             static_cast<int>(maxIntensity * 0.025));
     }
 
-    const std::string rgbValBackground = intensityToColour(backgroundIntensity);
-    std::memcpy(&frameBufPos[position], rgbValBackground.data(), rgbValBackground.size());
-    position += rgbValBackground.size() + 1;
+    // const std::string rgbValBackground = intensityToColour(backgroundIntensity);
+    // std::memcpy(&frameBufPos[position], rgbValBackground.data(), rgbValBackground.size());
+    this->setRGBValues(backgroundIntensity, &frameBufPos[position]);
+    position += 11 + 1;
     frameBufPos[position] = this->intensityToChar(intensity);
 }
 
@@ -284,6 +286,50 @@ std::string doomASCIIFire::intensityToColour(const int intensity) const
     return std::format("{:03}",red) + ";" + std::format("{:03}", green) + ";" + std::format("{:03}", blue);
 }
 
+void doomASCIIFire::setRGBValues(int intensity, char *frameBufPos) const
+{
+    constexpr int maxColourVal = 254;
+
+    std::array rgb = {maxColourVal, maxColourVal, 0};
+
+    // work out percentage to absolute zero
+    const float percentage = static_cast<float>(intensity) / static_cast<float>(maxIntensity);
+
+    const float colourBandOne = 0.8 * colour_band_multiplier;
+    const float colourBandTwo = 0.2 * colour_band_multiplier;
+
+    if (percentage >= colourBandOne) // white to yellow
+    {
+        rgb[2] = maxColourVal * this->normalise(percentage, colourBandOne, 1.0);
+    }
+    else if (percentage >= colourBandTwo) // yellow to red
+    {
+        rgb[2] = 0;
+        rgb[1] = maxColourVal * this->normalise(percentage, colourBandTwo, colourBandOne) ;
+    }
+    else // red to black
+    {
+        rgb[2] = 0;
+        rgb[1] = 0;
+        rgb[0] = maxColourVal * this->normalise(percentage, 0.0, colourBandTwo);
+    }
+
+    int position = 0;
+    for (const int colour : rgb)
+    {
+        frameBufPos[position++] = '0' + (colour / 100);
+        frameBufPos[position++] = '0' + (colour / 10 % 10);
+        frameBufPos[position++] = '0' + (colour % 10);
+
+        if (position < 10)
+        {
+            frameBufPos[position++] = ';';
+        }
+    }
+
+}
+
+
 float doomASCIIFire::normalise(const float value, const float min, const float max)
 {
     const float normalised = (value - min) / (max - min);
@@ -318,7 +364,6 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     this->gaussRandomBuffer = ippsMalloc_16s(this->frameBufferSize);
     this->uniformRandomBuffer = ippsMalloc_16s(this->frameBufferSize);
 
-    // this->frameBuffer = new Ipp16s*[this->frameBufferHeight];
     this->frameBuffer = ippsMalloc_16s(this->frameBufferSize);
     ippsSet_16s(minIntensity, this->frameBuffer, this->frameBufferSize - this->frameBufferWidth);
     ippsSet_16s(maxIntensity, &this->frameBuffer[this->frameBufferSize - this->frameBufferWidth], this->frameBufferWidth);

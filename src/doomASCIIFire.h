@@ -40,6 +40,7 @@ private:
 
      char intensityToChar(int intensity) const;
      std::string intensityToColour(int intensity) const;
+     void setRGBValues(int intensity, char* frameBufPos) const;
      void setCharacter(int intensity, char* frameBufPos, bool newline) const;
 
      void initConstantChars(char* frameBufPos, bool newline);
