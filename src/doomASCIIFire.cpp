@@ -174,7 +174,7 @@ void doomASCIIFire::setCharacter(const int intensity, char* frameBufPos, const b
     this->setRGBValues(intensity, &frameBufPos[position]);
 
     // Increment position to next point in char array we need to modify
-    position += 17;
+    position += 19;
 
     // Assign bg rgb value
     int backgroundIntensity {};
@@ -204,11 +204,11 @@ void doomASCIIFire::initConstantChars(char* frameBufPos, const bool newline)
 
     if (newline)
     {
-        ansiiEscapeCode = "\033[38;2;000;000;000;48;2;000;000;000m \033[0m\n";
+        ansiiEscapeCode = "\033[38;2;000;000;000m\033[48;2;000;000;000m \033[0m\n";
     }
     else
     {
-        ansiiEscapeCode = "\033[038;2;000;000;000;48;2;000;000;000m \033[0m";
+        ansiiEscapeCode = "\033[038;2;000;000;000m\033[48;2;000;000;000m \033[0m";
     }
 
     for (int i = 0; i < ansiiEscapeCode.length(); ++i)

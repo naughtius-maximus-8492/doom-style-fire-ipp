@@ -15,7 +15,7 @@ constexpr int defaultLowBoundUniform = 0;
 constexpr int defaultMeanGauss = -5;
 
 constexpr unsigned int defaultDelay = 67;
-constexpr unsigned int fixedCharacterLength = 42;
+constexpr unsigned int fixedCharacterLength = 44;
 
 constexpr int defaultFlicker = 4;
 
