@@ -1,13 +1,12 @@
 #pragma once
 #include "linux-keys.h"
 #ifdef WIN32
-#define NOMINMAX
 #include "Windows.h"
 
-inline void printFrameFast(const std::string& frame)
+inline void printFrameFast(const char* frame, const int length)
 {
     DWORD written;
-    WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), frame.c_str(), frame.length(), &written, nullptr);
+    WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), frame, length, &written, nullptr);
 }
 
 inline void calculateHeightWidth(int* height, int* width)
@@ -42,9 +41,9 @@ struct KeyHandler{
 #endif
 };
 
-inline void printFrameFast(const std::string& frame)
+inline void printFrameFast(char* frame, int length)
 {
-    write(STDOUT_FILENO, frame.data(), frame.size());
+    write(STDOUT_FILENO, frame, length);
 }
 
 inline void calculateHeightWidth(int* height, int* width)
@@ -60,4 +59,22 @@ inline void calculateHeightWidth(int* height, int* width)
 inline void clearScreen()
 {
     std::cout << "\033[2J\033[H" << std::endl;
+}
+
+
+inline void toggle_cursor(bool hidden)
+{
+    if(hidden){
+#ifdef WIN32
+        std::cout << "\033[?25l";  // hide cursor
+#else
+        std::cout << "\e[?25l" << std::flush;  // Hide cursor
+#endif
+    } else {
+#ifdef WIN32
+        std::cout << "\033[?25h";  // hide cursor
+#else
+        std::cout << "\x1B[?25h" << std::flush; 
+#endif
+    }
 }

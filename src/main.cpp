@@ -13,9 +13,11 @@
 #include <unistd.h>
 
 
+
 int main()
 {
     KeyHandler keyHandler;
+    toggle_cursor(true);
     int width {};
     int height {};
 
@@ -50,7 +52,7 @@ int main()
 
         last = std::chrono::steady_clock::now();
 
-        printFrameFast(fire->charFrameBuffer);
+        printFrameFast(fire->startCharFrameBuffer, fire->charFrameBufferSize);
 
         if (keyHandler.detect_key_press(Key::q))
         {
@@ -67,11 +69,11 @@ int main()
         }
         if (keyHandler.detect_key_press(Key::d))
         {
-            fire->colour_band_multiplier -= 0.02;
+            fire->colourBandMultiplier -= 0.02;
         }
         if (keyHandler.detect_key_press(Key::a))
         {
-            fire->colour_band_multiplier += 0.02;
+            fire->colourBandMultiplier += 0.02;
         }
         if (keyHandler.detect_key_press(Key::f))
         {
@@ -124,10 +126,11 @@ int main()
             delete fire;
             fire = new doomASCIIFire(width, height);
         }
-
     }
 
     delete fire;
     clearScreen();
+    toggle_cursor(false);
+
     return 0;
 }

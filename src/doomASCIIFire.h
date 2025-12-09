@@ -15,11 +15,11 @@ constexpr int defaultLowBoundUniform = 0;
 constexpr int defaultMeanGauss = -5;
 
 constexpr unsigned int defaultDelay = 67;
-constexpr unsigned int fixedCharacterLength = 42;
+constexpr unsigned int fixedCharacterLength = 44;
 
 constexpr int defaultFlicker = 4;
 
-constexpr std::string defaultFlameGradient = " `'^x!|ioedO0&#";
+constexpr const char *defaultFlameGradient = " `'^x!|ioedO0&#";
 
 class doomASCIIFire
 {
@@ -28,9 +28,8 @@ private:
      std::string characters;
      int frameBufferWidth;
      int frameBufferHeight;
-     int frameBufferSize;
 
-     Ipp16s** frameBuffer;
+     Ipp16s* frameBuffer;
 
      Ipp16s* gaussRandomBuffer;
      Ipp16s* uniformRandomBuffer;
@@ -40,16 +39,25 @@ private:
      void initRandomFunctions();
 
      char intensityToChar(int intensity) const;
-     std::string intensityToColour(int intensity) const;
-     inline std::string getCharacter(int intensity, bool newline = false) const;
+     void setRGBValues(int intensity, char* frameBufPos) const;
+     void setCharacter(int intensity, char* frameBufPos, bool newline) const;
+
+     static void initConstantChars(char* frameBufPos, bool newline);
 
      static float normalise(float value, float min, float max);
 
      time_t seededTime;
 
+     // used for internal calculation that don't want to in
+     char* offsetCharFrameBuffer;
+
+
 public:
-     char* charFrameBuffer;
-     float colour_band_multiplier;
+     // Used for getting the entire frame buffer
+     char* startCharFrameBuffer;
+     int charFrameBufferSize;
+     int frameBufferSize;
+     float colourBandMultiplier;
      bool backgroundMode;
      int frameDelay;
      int flicker;
