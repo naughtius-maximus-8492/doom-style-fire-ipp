@@ -23,6 +23,7 @@ inline void calculateHeightWidth(int* height, int* width)
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <iostream>
+#include "linux-virtual-keys.h"
 
 struct KeyHandler{
         
