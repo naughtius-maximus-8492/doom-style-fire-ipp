@@ -69,7 +69,7 @@ public:
 
      void decayStep() const;
 
-     void openConfig();
+     void openConfig(KeyHandler& handler);
 
      void updateDecayRate(bool increment);
 };

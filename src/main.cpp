@@ -1,15 +1,11 @@
 #include "linux-keys.h"
-#include "oneapi/tbb/parallel_pipeline.h"
 #include <chrono>
-#include <cstdlib>
-#include <iostream>
 
 #ifdef WIN32
 #else
 #endif
 
 #include "doomASCIIFire.h"
-#include <termios.h>
 #include <unistd.h>
 
 
@@ -56,7 +52,7 @@ int main()
 
         if (keyHandler.detect_key_press(Key::q))
         {
-            fire->openConfig();
+            fire->openConfig(keyHandler);
             std::this_thread::sleep_for(std::chrono::milliseconds(150));
         }
         if (keyHandler.detect_key_press(Key::UP))
