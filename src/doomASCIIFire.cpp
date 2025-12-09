@@ -92,12 +92,11 @@ void doomASCIIFire::decayStep()
     ippsFree(offsetBuffer);
 }
 
-void doomASCIIFire::openConfig()
+void doomASCIIFire::openConfig(KeyHandler& handler)
 {
-#ifdef WIN32
     clearScreen();
     std::cout << "ASCII Fire Configuration" << std::endl
-            << "1) Set characters to use" << std::endl
+            << "C) Set characters to use (Windows Only)" << std::endl
             << "Q) Back to fire" << std::endl << std::endl
     << "Live Configuration Binds:" << std::endl
     << "UP/DOWN     : Fire Height" << std::endl
@@ -116,7 +115,8 @@ void doomASCIIFire::openConfig()
     bool exit = false;
     while (!exit)
     {
-        if (detect_key_press('1'))
+#ifdef WIN32
+        if (handler.detect_key_press(Key::c))
         {
             clearScreen();
 
@@ -128,15 +128,15 @@ void doomASCIIFire::openConfig()
             FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
             std::cin >> this->characters;
 
-            this->openConfig();
+            this->openConfig(handler);
         }
-        else if (detect_key_press('Q'))
+#endif
+        if (handler.detect_key_press(Key::q))
         {
             clearScreen();
             exit = true;
         }
     }
-#endif
 }
 
 void doomASCIIFire::updateDecayRate(const bool increment)

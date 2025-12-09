@@ -75,7 +75,7 @@ public:
 
      void decayStep();
 
-     void openConfig();
+     void openConfig(KeyHandler& handler);
 
      void updateDecayRate(bool increment);
 };
