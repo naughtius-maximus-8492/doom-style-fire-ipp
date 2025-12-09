@@ -39,22 +39,22 @@ private:
      void initRandomFunctions();
 
      char intensityToChar(int intensity) const;
-     void setRGBValues(int intensity, char* frameBufPos) const;
-     void setCharacter(int intensity, char* frameBufPos, bool newline) const;
+     void setRGBValues(int intensity, Ipp8u* frameBufPos) const;
+     void setCharacter(int intensity, Ipp8u* frameBufPos, bool newline) const;
 
-     static void initConstantChars(char* frameBufPos, bool newline);
+     static void initConstantChars(Ipp8u* frameBufPos, bool newline);
 
      static float normalise(float value, float min, float max);
 
      time_t seededTime;
 
      // used for internal calculation that don't want to in
-     char* offsetCharFrameBuffer;
+     Ipp8u* offsetCharFrameBuffer;
 
 
 public:
      // Used for getting the entire frame buffer
-     char* startCharFrameBuffer;
+     Ipp8u* startCharFrameBuffer;
      int charFrameBufferSize;
      int frameBufferSize;
      float colourBandMultiplier;

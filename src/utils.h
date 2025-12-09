@@ -6,7 +6,7 @@ inline bool detect_key_press(const char code)
     return (GetAsyncKeyState(code) & 0x8000) != 0;
 }
 
-inline void printFrameFast(const char* frame, const int length)
+inline void printFrameFast(const Ipp8u* frame, const int length)
 {
     DWORD written;
     WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), frame, length, &written, nullptr);

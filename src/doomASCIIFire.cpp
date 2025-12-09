@@ -145,7 +145,7 @@ void doomASCIIFire::updateFrame() const
             for (int i = range.begin(); i != range.end(); ++i)
             {
                 const short intensity = this->frameBuffer[i];
-                char* frameBufPos = &this->offsetCharFrameBuffer[i * fixedCharacterLength];
+                Ipp8u* frameBufPos = &this->offsetCharFrameBuffer[i * fixedCharacterLength];
 
                 bool newline = false;
                 if (i % this->frameBufferWidth == 0)
@@ -159,7 +159,7 @@ void doomASCIIFire::updateFrame() const
     );
 }
 
-void doomASCIIFire::setCharacter(const int intensity, char* frameBufPos, const bool newline) const
+void doomASCIIFire::setCharacter(const int intensity, Ipp8u* frameBufPos, const bool newline) const
 {
     int position = 8;
 
@@ -198,7 +198,7 @@ void doomASCIIFire::setCharacter(const int intensity, char* frameBufPos, const b
     frameBufPos[position] = this->intensityToChar(intensity);
 }
 
-void doomASCIIFire::initConstantChars(char* frameBufPos, const bool newline)
+void doomASCIIFire::initConstantChars(Ipp8u* frameBufPos, const bool newline)
 {
     std::string ansiiEscapeCode {};
 
@@ -223,7 +223,7 @@ char doomASCIIFire::intensityToChar(const int intensity) const
     return this->characters[index];
 }
 
-void doomASCIIFire::setRGBValues(const int intensity, char *frameBufPos) const
+void doomASCIIFire::setRGBValues(const int intensity, Ipp8u *frameBufPos) const
 {
     constexpr int maxColourVal = 254;
 
@@ -306,7 +306,7 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     ippsSet_16s(maxIntensity, &this->frameBuffer[this->frameBufferSize - this->frameBufferWidth], this->frameBufferWidth);
 
     this->charFrameBufferSize = this->frameBufferSize * fixedCharacterLength + this->frameBufferHeight + 3;
-    this->startCharFrameBuffer = new char[charFrameBufferSize];
+    this->startCharFrameBuffer = ippsMalloc_8u(this->charFrameBufferSize);
     this->startCharFrameBuffer[0] = '\033';
     this->startCharFrameBuffer[1] = '[';
     this->startCharFrameBuffer[2] = 'H';
@@ -316,7 +316,7 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
 
     for (int i = 0; i < this->frameBufferSize; ++i)
     {
-        char* frameBufPos = &this->offsetCharFrameBuffer[i * fixedCharacterLength];
+        Ipp8u* frameBufPos = &this->offsetCharFrameBuffer[i * fixedCharacterLength];
 
         bool newline = false;
         if (i % this->frameBufferWidth == 0)
@@ -340,5 +340,6 @@ doomASCIIFire::~doomASCIIFire()
     ippsFree(this->uniformRandomState);
     ippsFree(this->gaussianRandomState);
 
-    delete[] this->startCharFrameBuffer;
+    // delete[] this->startCharFrameBuffer;
+    ippsFree(this->startCharFrameBuffer);
 }
