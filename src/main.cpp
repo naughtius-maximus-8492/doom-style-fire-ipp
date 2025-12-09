@@ -6,9 +6,6 @@
 #endif
 
 #include "doomASCIIFire.h"
-#include <unistd.h>
-
-
 
 int main()
 {

@@ -2,9 +2,10 @@
 #include <iostream>
 #ifdef WIN32
 #include "Windows.h"
+#include "keys.h"
 #else
-#include <sys/ioctl.h>
 #include <unistd.h>
+#include <sys/ioctl.h>
 #include "linux-keys.h"
 #include <ipp.h>
 #endif

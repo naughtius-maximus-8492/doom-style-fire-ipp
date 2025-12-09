@@ -7,7 +7,6 @@
 #include <vector>
 #include <chrono>
 #include <termios.h>
-#include <unistd.h>
 #include "keys.h"
 
 namespace LT {

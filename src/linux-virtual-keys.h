@@ -8,7 +8,6 @@
 
 // --- Arrow keys ---
 #include <cstring>
-#include <unistd.h>
 #define VK_UP     "\033[A"
 #define VK_DOWN   "\033[B"
 #define VK_RIGHT  "\033[C"
