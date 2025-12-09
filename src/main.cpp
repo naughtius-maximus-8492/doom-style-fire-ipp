@@ -1,4 +1,5 @@
 #include <chrono>
+#include <csignal>
 
 #ifdef WIN32
 #else
@@ -6,10 +7,10 @@
 
 #include "doomASCIIFire.h"
 
+
 int main()
 {
-
-    std::cout << "\033[?25l";  // hide cursor
+    toggle_cursor(true);
 
     int width {};
     int height {};
@@ -124,14 +125,12 @@ int main()
             delete fire;
             fire = new doomASCIIFire(width, height);
         }
-
     }
 
     delete fire;
 
     clearScreen();
-
-    std::cout << "\033[?25h";  // show cursor
+    toggle_cursor(false);
 
     return 0;
 }

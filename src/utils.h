@@ -1,5 +1,5 @@
 #ifdef WIN32
-#define NOMINMAX
+define NOMINMAX
 #include "Windows.h"
 
 inline bool detect_key_press(const char code)
@@ -47,4 +47,22 @@ inline void calculateHeightWidth(int* height, int* width)
 inline void clearScreen()
 {
     std::cout << "\033[2J\033[H";
+}
+
+
+inline void toggle_cursor(bool hidden)
+{
+    if(hidden){
+#ifdef WIN32
+        std::cout << "\033[?25l";  // hide cursor
+#else
+        std::cout << "\e[?25l" << std::flush;  // Hide cursor
+#endif
+    } else {
+#ifdef WIN32
+        std::cout << "\033[?25h";  // hide cursor
+#else
+        std::cout << "\x1B[?25h" << std::flush; 
+#endif
+    }
 }
