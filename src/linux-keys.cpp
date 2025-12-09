@@ -1,6 +1,7 @@
 #include "linux-keys.h"
 #include <chrono>
 
+
 LT::LinuxKeyHandler::LinuxKeyHandler():
     key_down_thread(&LT::LinuxKeyHandler::key_down_func, this)
 {

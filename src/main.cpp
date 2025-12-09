@@ -8,21 +8,10 @@
 #include <termios.h>
 #include <unistd.h>
 
-// Function to set terminal to raw mode
-void setRawMode(bool enable) {
-    static struct termios oldt, newt;
-    if (enable) {
-        tcgetattr(STDIN_FILENO, &oldt);  // Save old settings
-        newt = oldt;
-        newt.c_lflag &= ~(ICANON | ECHO);  // Disable canonical mode and echo
-        tcsetattr(STDIN_FILENO, TCSANOW, &newt);  // Apply new settings
-    } else {
-        tcsetattr(STDIN_FILENO, TCSANOW, &oldt);  // Restore old settings
-    }
-}
 
 int main()
 {
+    KeyHandler keyHandler;
     int width {};
     int height {};
 
@@ -59,35 +48,33 @@ int main()
 
         printFrameFast(fire->charFrameBuffer);
 
-#ifdef WIN32
-
-        if (detect_key_press('Q'))
+        if (keyHandler.detect_key_press('Q'))
         {
             fire->openConfig();
             std::this_thread::sleep_for(std::chrono::milliseconds(150));
         }
-        if (detect_key_press(VK_UP))
+        if (keyHandler.detect_key_press(VK_UP))
         {
             fire->updateDecayRate(false);
         }
-        if (detect_key_press(VK_DOWN))
+        if (keyHandler.detect_key_press(VK_DOWN))
         {
             fire->updateDecayRate(true);
         }
-        if (detect_key_press('D'))
+        if (keyHandler.detect_key_press('D'))
         {
             fire->colour_band_multiplier -= 0.02;
         }
-        if (detect_key_press('A'))
+        if (keyHandler.detect_key_press('A'))
         {
             fire->colour_band_multiplier += 0.02;
         }
-        if (detect_key_press('F'))
+        if (keyHandler.detect_key_press('F'))
         {
             fire->backgroundMode =  !fire->backgroundMode;
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
-        if (detect_key_press('S'))
+        if (keyHandler.detect_key_press('S'))
         {
             fire->frameDelay++;
             if (fire->frameDelay >= 1000)
@@ -95,7 +82,7 @@ int main()
                 fire->frameDelay = 100;
             }
         }
-        if (detect_key_press('W'))
+        if (keyHandler.detect_key_press('W'))
         {
             fire->frameDelay--;
             if (fire->frameDelay <= 0)
@@ -103,7 +90,7 @@ int main()
                 fire->frameDelay = 0;
             }
         }
-        if (detect_key_press(VK_RIGHT))
+        if (keyHandler.detect_key_press(VK_RIGHT))
         {
             fire->flicker++;
             if (fire->flicker > width / 3)
@@ -111,7 +98,7 @@ int main()
                 fire->flicker = width / 3;
             }
         }
-        if (detect_key_press(VK_LEFT))
+        if (keyHandler.detect_key_press(VK_LEFT))
         {
             fire->flicker--;
             if (fire->flicker <= 0)
@@ -119,15 +106,12 @@ int main()
                 fire->flicker = 0;
             }
         }
-        if (detect_key_press(VK_ESCAPE))
+        if (keyHandler.detect_key_press(VK_ESCAPE))
         {
             running = false;
         }
 
-#endif
-
         // Check if window size has changed
-
         calculateHeightWidth(&height, &width);
         if (oldHeight != height || oldWidth != width)
         {

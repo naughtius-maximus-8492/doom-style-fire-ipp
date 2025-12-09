@@ -9,7 +9,6 @@
 #include <unistd.h>
 
 namespace LT {
-
     // Function to set terminal to raw mode
     inline void setRawMode(bool enable) {
         static struct termios oldt, newt;
@@ -37,4 +36,5 @@ namespace LT {
         ~LinuxKeyHandler();
         bool GetAsyncKeyState(const char& key);
     };
+
 }
