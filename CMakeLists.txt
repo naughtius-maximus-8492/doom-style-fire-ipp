@@ -24,6 +24,8 @@ set(SOURCES
         src/doomASCIIFire.h
         src/doomASCIIFire.cpp
         src/utils.h
+        src/linux-keys.cpp
+        src/linux-keys.h
 )
 
 add_executable(doomAsciiFire

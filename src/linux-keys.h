@@ -28,13 +28,13 @@ namespace LT {
         std::map<char, std::chrono::time_point<std::chrono::steady_clock>> pressed_keys;
         bool running = false;
         std::thread key_down_thread;
-        std::thread key_up_thread;
-        void key_up_func();
         void key_down_func();
+
+        const int delay = 100;
 
     public:
         LinuxKeyHandler();
         ~LinuxKeyHandler();
-        bool GetAsyncKeyState(char key);
+        bool GetAsyncKeyState(const char& key);
     };
 }
