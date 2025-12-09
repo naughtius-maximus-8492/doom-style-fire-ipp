@@ -17,9 +17,9 @@ constexpr int defaultMeanGauss = -5;
 constexpr unsigned int defaultDelay = 67;
 constexpr unsigned int fixedCharacterLength = 44;
 
-constexpr int defaultFlicker = 1;
+constexpr int defaultFlicker = 3;
 
-constexpr const char *defaultFlameGradient = " `'^x!|ioedO0&#";
+constexpr const char *defaultFlameGradient = " .ixo#";
 
 constexpr Ipp8u ansiiEscapeCodeNewline[] = "\033[38;2;000;000;000m\033[48;2;000;000;000m \033[0m\n";
 constexpr Ipp8u ansiiEscapeCode[] = "\033[038;2;000;000;000m\033[48;2;000;000;000m \033[0m";
@@ -29,8 +29,8 @@ class doomASCIIFire
 private:
      int decayRate;
      std::string characters;
-     int frameBufferWidth;
-     int frameBufferHeight;
+     int intensityBufferWidth;
+     int intensityBufferHeight;
 
      Ipp16s* intensityBuffer;
 
@@ -48,8 +48,11 @@ private:
      void initConstantChars() const;
 
      static float normalise(float value, float min, float max);
+     void setWeightedMean(Ipp16s* frameBufPos, int offset) const;
 
      time_t seededTime;
+     std::mt19937 rng;
+     std::uniform_int_distribution<int> randDistribution;
 
      // used for internal calculation that don't want to in
      Ipp8u* offsetCharFrameBuffer;
@@ -59,7 +62,7 @@ public:
      // Used for getting the entire frame buffer
      Ipp8u* startCharFrameBuffer;
      int charFrameBufferSize;
-     int frameBufferSize;
+     int intensityBufferSize;
      float colourBandMultiplier;
      bool backgroundMode;
      int frameDelay;
@@ -70,7 +73,7 @@ public:
 
      void updateFrame() const;
 
-     void decayStep() const;
+     void decayStep();
 
      void openConfig();
 

@@ -15,56 +15,81 @@ void doomASCIIFire::initRandomFunctions()
     ippsRandGaussInit_16s(this->gaussianRandomState, defaultMeanGauss, this->decayRate / 2, this->seededTime);
 }
 
-void doomASCIIFire::decayStep() const
+void doomASCIIFire::decayStep()
 {
-    std::mt19937 rng(this->seededTime);
-
     // copy frames upwards
-    tbb::parallel_for(static_cast<size_t>(0), static_cast<size_t>(this->frameBufferHeight - 1), [&](const size_t i)
+    tbb::parallel_for(static_cast<size_t>(0), static_cast<size_t>(this->intensityBufferHeight - 1), [&](const size_t i)
     {
-        Ipp16s* row = &this->intensityBuffer[i * this->frameBufferWidth];
-        Ipp16s* rowBelow = &row[this->frameBufferWidth];
+        Ipp16s* row = &this->intensityBuffer[i * this->intensityBufferWidth];
+        Ipp16s* rowBelow = &row[this->intensityBufferWidth];
 
         // Offset copy and rotate end or start values to simulate flickering
-        std::uniform_int_distribution<> uniformDistribution(defaultFlicker * -1, defaultFlicker);
-        int fireOffset = uniformDistribution(rng);
+        int fireOffset = randDistribution(rng);
 
-        const unsigned int positiveFireOffset = std::abs(fireOffset);
-        Ipp16s* offsetBuffer = ippsMalloc_16s(fireOffset);
-
-        if (fireOffset == 0)
+        for (int x = 0; x < this->intensityBufferWidth; x++)
         {
-            ippsCopy_16s(rowBelow, row, this->frameBufferWidth);
-        }
-        if (fireOffset > 0)
-        {
-            ippsCopy_16s(&rowBelow[this->frameBufferWidth - positiveFireOffset], offsetBuffer, positiveFireOffset);
-            ippsCopy_16s(rowBelow, &row[positiveFireOffset], this->frameBufferWidth - positiveFireOffset);
-            ippsCopy_16s(offsetBuffer, row, fireOffset);
-        }
-        else if (fireOffset < 0)
-        {
-            ippsCopy_16s(rowBelow, offsetBuffer, positiveFireOffset);
-            ippsCopy_16s(&rowBelow[positiveFireOffset], row, this->frameBufferWidth - positiveFireOffset);
-            ippsCopy_16s(offsetBuffer, &row[this->frameBufferWidth - positiveFireOffset], positiveFireOffset);
+            this->setWeightedMean(&row[x], fireOffset);
         }
 
-        ippsFree(offsetBuffer);
+        // Ipp16s* offsetBuffer = ippsMalloc_16s(fireOffset);
+        // const unsigned int positiveFireOffset = std::abs(fireOffset);
+        // if (fireOffset == 0)
+        // {
+        //     ippsCopy_16s(rowBelow, row, this->frameBufferWidth);
+        // }
+        // if (fireOffset > 0)
+        // {
+        //     ippsCopy_16s(&rowBelow[this->frameBufferWidth - positiveFireOffset], offsetBuffer, positiveFireOffset);
+        //     ippsCopy_16s(rowBelow, &row[positiveFireOffset], this->frameBufferWidth - positiveFireOffset);
+        //     ippsCopy_16s(offsetBuffer, row, fireOffset);
+        // }
+        // else if (fireOffset < 0)
+        // {
+        //     ippsCopy_16s(rowBelow, offsetBuffer, positiveFireOffset);
+        //     ippsCopy_16s(&rowBelow[positiveFireOffset], row, this->frameBufferWidth - positiveFireOffset);
+        //     ippsCopy_16s(offsetBuffer, &row[this->frameBufferWidth - positiveFireOffset], positiveFireOffset);
+        // }
+        // ippsFree(offsetBuffer);
+
 
         // Generate random distribution
-        Ipp16s* uniformBufferPos = &this->uniformRandomBuffer[i * frameBufferWidth];
-        ippsRandUniform_16s(uniformBufferPos, this->frameBufferWidth, uniformRandomState);
-        ippsSub_16s_I(uniformBufferPos, row, this->frameBufferWidth);
+        Ipp16s* uniformBufferPos = &this->uniformRandomBuffer[i * intensityBufferWidth];
+        ippsRandUniform_16s(uniformBufferPos, this->intensityBufferWidth, uniformRandomState);
+        ippsSub_16s_I(uniformBufferPos, row, this->intensityBufferWidth);
 
         // Generate gaussian distribution
-        Ipp16s* gaussBufferPos = &this->gaussRandomBuffer[i * frameBufferWidth];
-        ippsRandGauss_16s(gaussBufferPos, this->frameBufferWidth, this->gaussianRandomState);
-        ippsSub_16s_I(gaussBufferPos, row, this->frameBufferWidth);
+        Ipp16s* gaussBufferPos = &this->gaussRandomBuffer[i * intensityBufferWidth];
+        ippsRandGauss_16s(gaussBufferPos, this->intensityBufferWidth, this->gaussianRandomState);
+        ippsSub_16s_I(gaussBufferPos, row, this->intensityBufferWidth);
 
-        ippsThreshold_LT_16s_I(row, this->frameBufferWidth, minIntensity);
-        ippsThreshold_GT_16s_I(row, this->frameBufferWidth, maxIntensity);
+        ippsThreshold_LT_16s_I(row, this->intensityBufferWidth, minIntensity);
+
+        ippsThreshold_GT_16s_I(row, this->intensityBufferWidth, maxIntensity);
+
     });
 
+
+    // Update bottom row to have new flame sources
+    int fireOffset = randDistribution(rng);
+
+    Ipp16s* row = &this->intensityBuffer[this->intensityBufferSize - this->intensityBufferWidth];
+    Ipp16s* rowBelow = &this->intensityBuffer[this->intensityBufferSize - this->intensityBufferWidth];
+
+    Ipp16s* offsetBuffer = ippsMalloc_16s(fireOffset);
+    const unsigned int positiveFireOffset = std::abs(fireOffset);
+    if (fireOffset > 0)
+    {
+        ippsCopy_16s(&rowBelow[this->intensityBufferWidth - positiveFireOffset], offsetBuffer, positiveFireOffset);
+        ippsCopy_16s(rowBelow, &row[positiveFireOffset], this->intensityBufferWidth - positiveFireOffset);
+        ippsCopy_16s(offsetBuffer, row, fireOffset);
+    }
+    else if (fireOffset < 0)
+    {
+        ippsCopy_16s(rowBelow, offsetBuffer, positiveFireOffset);
+        ippsCopy_16s(&rowBelow[positiveFireOffset], row, this->intensityBufferWidth - positiveFireOffset);
+        ippsCopy_16s(offsetBuffer, &row[this->intensityBufferWidth - positiveFireOffset], positiveFireOffset);
+    }
+    ippsFree(offsetBuffer);
 }
 
 void doomASCIIFire::openConfig()
@@ -82,8 +107,8 @@ void doomASCIIFire::openConfig()
     << "F           : Background mode" << std::endl
     << "ESC         : Quit" << std::endl << std::endl
     << "Statistics:" << std::endl
-    << "Frame buffer height : " << this->frameBufferHeight << std::endl
-    << "Frame buffer width  : " << this->frameBufferWidth << std::endl
+    << "Frame buffer height : " << this->intensityBufferHeight << std::endl
+    << "Frame buffer width  : " << this->intensityBufferWidth << std::endl
     << "Frame delay         : " << this->frameDelay << "ms (" << (1.0F / static_cast<float>(this->frameDelay)) * 1000 << " FPS)" << std::endl;
 
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
@@ -139,7 +164,7 @@ void doomASCIIFire::updateDecayRate(const bool increment)
 void doomASCIIFire::updateFrame() const
 {
     tbb::parallel_for(
-        tbb::blocked_range<size_t>(0, this->frameBufferSize, 1024),
+        tbb::blocked_range<size_t>(0, this->intensityBufferSize, 1024),
         [&](const tbb::blocked_range<size_t>& range)
     {
             for (int i = range.begin(); i != range.end(); ++i)
@@ -148,7 +173,7 @@ void doomASCIIFire::updateFrame() const
                 Ipp8u* frameBufPos = &this->offsetCharFrameBuffer[i * fixedCharacterLength];
 
                 bool newline = false;
-                if (i % this->frameBufferWidth == 0)
+                if (i % this->intensityBufferWidth == 0)
                 {
                     newline = true;
                 }
@@ -201,11 +226,11 @@ void doomASCIIFire::setCharacter(const int intensity, Ipp8u* frameBufPos, const 
 void doomASCIIFire::initConstantChars() const
 {
 
-    for (int i = 0; i < this->frameBufferSize; ++i)
+    for (int i = 0; i < this->intensityBufferSize; ++i)
     {
         Ipp8u* frameBufPos = &this->offsetCharFrameBuffer[i * fixedCharacterLength];
 
-        if (i % this->frameBufferWidth == 0)
+        if (i % this->intensityBufferWidth == 0)
         {
             ippsCopy_8u(ansiiEscapeCodeNewline, frameBufPos, fixedCharacterLength);
         }
@@ -274,6 +299,15 @@ float doomASCIIFire::normalise(const float value, const float min, const float m
     return std::clamp(normalised, 0.0F, 1.0F);
 }
 
+void doomASCIIFire::setWeightedMean(Ipp16s *frameBufPos, int offset) const
+{
+    Ipp16s center = frameBufPos[this->intensityBufferWidth];
+    Ipp16s left = frameBufPos[this->intensityBufferWidth - 1];
+    Ipp16s right = frameBufPos[this->intensityBufferWidth + 1];
+
+    frameBufPos[offset] = (center * 2 + left + right) / 4;
+}
+
 doomASCIIFire::doomASCIIFire(const int width, const int height)
     : decayRate { 65000 / height }
     , characters { defaultFlameGradient }
@@ -282,6 +316,8 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     , backgroundMode(false)
     , frameDelay { defaultDelay }
     , flicker { 4 }
+    , rng { std::random_device{}() }
+    , randDistribution(defaultFlicker * -1, defaultFlicker)
 {
     if (decayRate < 1)
     {
@@ -294,19 +330,20 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     }
 
     // Calculate buffer sizes
-    this->frameBufferWidth = width;
-    this->frameBufferHeight = height;
-    this->frameBufferSize = width * height;
+    this->intensityBufferWidth = width;
+    this->intensityBufferHeight = height;
+    this->intensityBufferSize = width * height;
 
     // Allocate memory to buffers
-    this->gaussRandomBuffer = ippsMalloc_16s(this->frameBufferSize);
-    this->uniformRandomBuffer = ippsMalloc_16s(this->frameBufferSize);
+    this->gaussRandomBuffer = ippsMalloc_16s(this->intensityBufferSize);
+    this->uniformRandomBuffer = ippsMalloc_16s(this->intensityBufferSize);
 
-    this->intensityBuffer = ippsMalloc_16s(this->frameBufferSize);
-    ippsSet_16s(minIntensity, this->intensityBuffer, this->frameBufferSize - this->frameBufferWidth);
-    ippsSet_16s(maxIntensity, &this->intensityBuffer[this->frameBufferSize - this->frameBufferWidth], this->frameBufferWidth);
+    this->intensityBuffer = ippsMalloc_16s(this->intensityBufferSize);
+    ippsSet_16s(minIntensity, this->intensityBuffer, this->intensityBufferSize - this->intensityBufferWidth);
+    ippsSet_16s(maxIntensity / 1.2, &this->intensityBuffer[this->intensityBufferSize - this->intensityBufferWidth], this->intensityBufferWidth);
+    ippsSet_16s(maxIntensity, &this->intensityBuffer[this->intensityBufferSize - this->intensityBufferWidth / 2], this->intensityBufferWidth / 8);
 
-    this->charFrameBufferSize = this->frameBufferSize * fixedCharacterLength + this->frameBufferHeight + 4;
+    this->charFrameBufferSize = this->intensityBufferSize * fixedCharacterLength + this->intensityBufferHeight + 4;
     this->startCharFrameBuffer = ippsMalloc_8u(this->charFrameBufferSize);
     this->startCharFrameBuffer[0] = '\033';
     this->startCharFrameBuffer[1] = '[';
@@ -317,7 +354,9 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     this->initConstantChars();
     this->initRandomFunctions();
 
-    for (int i = 0; i < this->frameBufferHeight; i++)
+    ippsRandUniform_16s(this->uniformRandomBuffer, this->intensityBufferWidth, this->uniformRandomState);
+
+    for (int i = 0; i < this->intensityBufferHeight; i++)
     {
         this->decayStep();
     }
@@ -332,4 +371,5 @@ doomASCIIFire::~doomASCIIFire()
 
     // delete[] this->startCharFrameBuffer;
     ippsFree(this->startCharFrameBuffer);
+    ippsFree(this->intensityBuffer);
 }
