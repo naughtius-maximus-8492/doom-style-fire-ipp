@@ -21,6 +21,9 @@ constexpr int defaultFlicker = 4;
 
 constexpr const char *defaultFlameGradient = " `'^x!|ioedO0&#";
 
+constexpr Ipp8u ansiiEscapeCodeNewline[] = "\033[38;2;000;000;000m\033[48;2;000;000;000m \033[0m\n";
+constexpr Ipp8u ansiiEscapeCode[] = "\033[038;2;000;000;000m\033[48;2;000;000;000m \033[0m";
+
 class doomASCIIFire
 {
 private:
@@ -42,7 +45,7 @@ private:
      void setRGBValues(int intensity, Ipp8u* frameBufPos) const;
      void setCharacter(int intensity, Ipp8u* frameBufPos, bool newline) const;
 
-     static void initConstantChars(Ipp8u* frameBufPos, bool newline);
+     void initConstantChars();
 
      static float normalise(float value, float min, float max);
 

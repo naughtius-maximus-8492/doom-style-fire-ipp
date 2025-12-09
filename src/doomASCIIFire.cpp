@@ -198,23 +198,24 @@ void doomASCIIFire::setCharacter(const int intensity, Ipp8u* frameBufPos, const 
     frameBufPos[position] = this->intensityToChar(intensity);
 }
 
-void doomASCIIFire::initConstantChars(Ipp8u* frameBufPos, const bool newline)
+void doomASCIIFire::initConstantChars()
 {
-    std::string ansiiEscapeCode {};
 
-    if (newline)
+    for (int i = 0; i < this->frameBufferSize; ++i)
     {
-        ansiiEscapeCode = "\033[38;2;000;000;000m\033[48;2;000;000;000m \033[0m\n";
-    }
-    else
-    {
-        ansiiEscapeCode = "\033[038;2;000;000;000m\033[48;2;000;000;000m \033[0m";
+        Ipp8u* frameBufPos = &this->offsetCharFrameBuffer[i * fixedCharacterLength];
+
+        if (i % this->frameBufferWidth == 0)
+        {
+            ippsCopy_8u(ansiiEscapeCodeNewline, frameBufPos, fixedCharacterLength);
+        }
+        else
+        {
+            ippsCopy_8u(ansiiEscapeCode, frameBufPos, fixedCharacterLength);
+        }
     }
 
-    for (int i = 0; i < ansiiEscapeCode.length(); ++i)
-    {
-        frameBufPos[i] = ansiiEscapeCode[i];
-    }
+
 }
 
 char doomASCIIFire::intensityToChar(const int intensity) const
@@ -312,20 +313,8 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     this->startCharFrameBuffer[2] = 'H';
     this->offsetCharFrameBuffer = &this->startCharFrameBuffer[3];
 
+    this->initConstantChars();
     this->initRandomFunctions();
-
-    for (int i = 0; i < this->frameBufferSize; ++i)
-    {
-        Ipp8u* frameBufPos = &this->offsetCharFrameBuffer[i * fixedCharacterLength];
-
-        bool newline = false;
-        if (i % this->frameBufferWidth == 0)
-        {
-            newline = true;
-        }
-
-        this->initConstantChars(frameBufPos, newline);
-    }
 
     for (int i = 0; i < this->frameBufferHeight; i++)
     {
