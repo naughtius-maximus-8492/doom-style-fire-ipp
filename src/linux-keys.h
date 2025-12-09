@@ -2,14 +2,18 @@
 
 #include "linux-virtual-keys.h"
 #include <map>
+#include <sys/types.h>
 #include <thread>
+#include <unistd.h>
 #include <unordered_set>
 #include <vector>
 #include <chrono>
 #include <termios.h>
 #include "keys.h"
+#include <iostream>
 
 namespace LT {
+#ifdef __linux__
 
 // Interpret a buffer of bytes from terminal input and convert to a Key enum.
 // Returns KEY_NONE if unknown or unsupported.
@@ -96,4 +100,5 @@ inline Key decode_key(const char *buf, ssize_t n) {
         bool GetAsyncKeyState(const Key& key);
     };
 
+#endif
 }

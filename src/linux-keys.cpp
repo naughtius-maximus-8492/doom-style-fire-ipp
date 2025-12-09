@@ -1,10 +1,5 @@
 #include "linux-keys.h"
-#include "linux-virtual-keys.h"
-#include <chrono>
-#include <iostream>
 #ifdef __linux__
-#include <unistd.h>
-#endif
 
 
 LT::LinuxKeyHandler::LinuxKeyHandler():
@@ -45,3 +40,4 @@ bool LT::LinuxKeyHandler::GetAsyncKeyState(const Key& key){
     }
     return false;
 };
+#endif
