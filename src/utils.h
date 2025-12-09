@@ -1,11 +1,34 @@
+#pragma once
+#include <iostream>
 #ifdef WIN32
 #include "Windows.h"
+#include "keys.h"
+#else
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include "linux-keys.h"
+#include <ipp.h>
+#endif
 
-inline bool detect_key_press(const char code)
-{
-    return (GetAsyncKeyState(code) & 0x8000) != 0;
-}
+struct KeyHandler{
+        
+#ifdef WIN32
+        inline bool detect_key_press(const Key& key)
+        {
+            const char code = keyToVkCode(key);
+            return (GetAsyncKeyState(code) & 0x8000) != 0;
+        }
+#else
+        LT::LinuxKeyHandler handler;
 
+        inline bool detect_key_press(const Key& key)
+        {
+            return handler.GetAsyncKeyState(key);
+        }
+#endif
+};
+
+#ifdef WIN32
 inline void printFrameFast(const Ipp8u* frame, const int length)
 {
     DWORD written;
@@ -20,15 +43,10 @@ inline void calculateHeightWidth(int* height, int* width)
     *width = csbi.dwSize.X;
     *height = csbi.dwSize.Y;
 }
-
 #else
-#include <sys/ioctl.h>
-#include <unistd.h>
 
 
-// TODO Equivalent linux key detection
-
-inline void printFrameFast(char* frame, int length)
+inline void printFrameFast(const Ipp8u* frame, const int length)
 {
     write(STDOUT_FILENO, frame, length);
 }
@@ -45,9 +63,8 @@ inline void calculateHeightWidth(int* height, int* width)
 // Universal compatibility
 inline void clearScreen()
 {
-    std::cout << "\033[2J\033[H";
+    std::cout << "\033[2J\033[H" << std::endl;
 }
-
 
 inline void toggle_cursor(bool hidden)
 {
