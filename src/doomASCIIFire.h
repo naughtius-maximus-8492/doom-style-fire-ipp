@@ -21,6 +21,9 @@ constexpr int defaultFlicker = 4;
 
 constexpr const char *defaultFlameGradient = " `'^x!|ioedO0&#";
 
+constexpr Ipp8u ansiiEscapeCodeNewline[] = "\033[38;2;000;000;000m\033[48;2;000;000;000m \033[0m\n";
+constexpr Ipp8u ansiiEscapeCode[] = "\033[038;2;000;000;000m\033[48;2;000;000;000m \033[0m";
+
 class doomASCIIFire
 {
 private:
@@ -29,7 +32,7 @@ private:
      int frameBufferWidth;
      int frameBufferHeight;
 
-     Ipp16s* frameBuffer;
+     Ipp16s* intensityBuffer;
 
      Ipp16s* gaussRandomBuffer;
      Ipp16s* uniformRandomBuffer;
@@ -39,22 +42,22 @@ private:
      void initRandomFunctions();
 
      char intensityToChar(int intensity) const;
-     void setRGBValues(int intensity, char* frameBufPos) const;
-     void setCharacter(int intensity, char* frameBufPos, bool newline) const;
+     void setRGBValues(int intensity, Ipp8u* frameBufPos) const;
+     void setCharacter(int intensity, Ipp8u* frameBufPos, bool newline) const;
 
-     static void initConstantChars(char* frameBufPos, bool newline);
+     void initConstantChars();
 
      static float normalise(float value, float min, float max);
 
      time_t seededTime;
 
      // used for internal calculation that don't want to in
-     char* offsetCharFrameBuffer;
+     Ipp8u* offsetCharFrameBuffer;
 
 
 public:
      // Used for getting the entire frame buffer
-     char* startCharFrameBuffer;
+     Ipp8u* startCharFrameBuffer;
      int charFrameBufferSize;
      int frameBufferSize;
      float colourBandMultiplier;
