@@ -7,6 +7,9 @@
 #include <iostream>
 #include <random>
 #include "utils.h"
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 
 constexpr unsigned int minIntensity = 0;
 constexpr unsigned int maxIntensity = 16384;

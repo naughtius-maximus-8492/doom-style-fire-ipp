@@ -90,6 +90,7 @@ void doomASCIIFire::decayStep()
         ippsCopy_16s(offsetBuffer, &row[this->intensityBufferWidth - positiveFireOffset], positiveFireOffset);
     }
     ippsFree(offsetBuffer);
+
 }
 
 void doomASCIIFire::openConfig(KeyHandler& handler)
@@ -309,7 +310,7 @@ void doomASCIIFire::setWeightedMean(Ipp16s *frameBufPos, int offset) const
 }
 
 doomASCIIFire::doomASCIIFire(const int width, const int height)
-    : decayRate { 65000 / height }
+    : decayRate { 50000 / height }
     , characters { defaultFlameGradient }
     , seededTime { time(nullptr) }
     , colourBandMultiplier { 1.0F }
@@ -340,8 +341,16 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
 
     this->intensityBuffer = ippsMalloc_16s(this->intensityBufferSize);
     ippsSet_16s(minIntensity, this->intensityBuffer, this->intensityBufferSize - this->intensityBufferWidth);
-    ippsSet_16s(maxIntensity / 1.2, &this->intensityBuffer[this->intensityBufferSize - this->intensityBufferWidth], this->intensityBufferWidth);
-    ippsSet_16s(maxIntensity, &this->intensityBuffer[this->intensityBufferSize - this->intensityBufferWidth / 2], this->intensityBufferWidth / 8);
+    // ippsSet_16s(maxIntensity / 1.3, bottomRow, this->intensityBufferWidth);
+    // ippsSet_16s(maxIntensity, &this->intensityBuffer[this->intensityBufferSize - this->intensityBufferWidth / 2], this->intensityBufferWidth / 8);
+
+    // Initialise flame source
+    Ipp16s* bottomRow = &this->intensityBuffer[this->intensityBufferSize - this->intensityBufferWidth];
+    // Ipp32f phase = 0;
+    // ippsTone_16s(bottomRow, this->intensityBufferWidth, maxIntensity, 0.02, &phase, ippAlgHintFast);
+    // ippsThreshold_LT_16s_I(bottomRow, this->intensityBufferWidth, minIntensity);
+    // ippsAddC_16s_I(maxIntensity / 1.8, bottomRow, this->intensityBufferWidth);
+
 
     this->charFrameBufferSize = this->intensityBufferSize * fixedCharacterLength + this->intensityBufferHeight + 4;
     this->startCharFrameBuffer = ippsMalloc_8u(this->charFrameBufferSize);
@@ -354,7 +363,14 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     this->initConstantChars();
     this->initRandomFunctions();
 
-    ippsRandUniform_16s(this->uniformRandomBuffer, this->intensityBufferWidth, this->uniformRandomState);
+    int randStateSize {};
+    ippsRandUniformGetSize_16s(&randStateSize);
+    IppsRandUniState_16s* state = reinterpret_cast<IppsRandUniState_16s *>(ippsMalloc_8u(randStateSize));
+    ippsRandUniformInit_16s(state, maxIntensity / 10, maxIntensity * 2, this->seededTime);
+    ippsRandUniform_16s(bottomRow, this->intensityBufferWidth, state);
+    ippsAbs_16s_I(bottomRow, this->intensityBufferWidth);
+    ippsAddC_16s_I(maxIntensity / 1.8, bottomRow, this->intensityBufferWidth);
+    ippsThreshold_GT_16s_I(bottomRow, this->intensityBufferWidth, maxIntensity * 1.1);
 
     for (int i = 0; i < this->intensityBufferHeight; i++)
     {
