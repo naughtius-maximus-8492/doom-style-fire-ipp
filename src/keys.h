@@ -16,7 +16,7 @@ enum Key{
     HOME,
     END,
     INSERT,
-    DELETE,
+    DEL,
     PAGEUP,
     PAGEDOWN,
 
@@ -67,7 +67,7 @@ inline int keyToVkCode(Key key) noexcept{
         case HOME:       return VK_HOME;
         case END:        return VK_END;
         case INSERT:     return VK_INSERT;
-        case DELETE:     return VK_DELETE;
+        case DEL:     return VK_DELETE;
         case PAGEUP:     return VK_PRIOR;  // PAGE UP
         case PAGEDOWN:   return VK_NEXT;   // PAGE DOWN
 

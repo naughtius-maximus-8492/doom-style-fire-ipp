@@ -1,5 +1,6 @@
 #pragma once
 
+#ifdef __linux__
 #include "linux-virtual-keys.h"
 #include <map>
 #include <sys/types.h>
@@ -11,6 +12,7 @@
 #include <termios.h>
 #include "keys.h"
 #include <iostream>
+#endif
 
 namespace LT {
 #ifdef __linux__
@@ -36,7 +38,7 @@ inline Key decode_key(const char *buf, ssize_t n) {
     if (strcmp(tmp, VK_HOME) == 0) return HOME;
     if (strcmp(tmp, VK_END) == 0) return END;
     if (strcmp(tmp, VK_INSERT) == 0) return INSERT;
-    if (strcmp(tmp, VK_DELETE) == 0) return DELETE;
+    if (strcmp(tmp, VK_DELETE) == 0) return DEL;
     if (strcmp(tmp, VK_PAGEUP) == 0) return PAGEUP;
     if (strcmp(tmp, VK_PAGEDOWN) == 0) return PAGEDOWN;
 

@@ -103,7 +103,7 @@ void doomASCIIFire::openConfig(KeyHandler& handler)
             FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
             std::cin >> this->characters;
 
-            this->openConfig();
+            this->openConfig(handler);
         }
 #endif
         if (handler.detect_key_press(Key::q))
