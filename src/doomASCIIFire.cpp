@@ -22,7 +22,7 @@ void doomASCIIFire::decayStep() const
     // copy frames upwards
     tbb::parallel_for(static_cast<size_t>(0), static_cast<size_t>(this->frameBufferHeight - 1), [&](const size_t i)
     {
-        Ipp16s* row = &this->frameBuffer[i * this->frameBufferWidth];
+        Ipp16s* row = &this->intensityBuffer[i * this->frameBufferWidth];
         Ipp16s* rowBelow = &row[this->frameBufferWidth];
 
         // Offset copy and rotate end or start values to simulate flickering
@@ -144,7 +144,7 @@ void doomASCIIFire::updateFrame() const
     {
             for (int i = range.begin(); i != range.end(); ++i)
             {
-                const short intensity = this->frameBuffer[i];
+                const short intensity = this->intensityBuffer[i];
                 Ipp8u* frameBufPos = &this->offsetCharFrameBuffer[i * fixedCharacterLength];
 
                 bool newline = false;
@@ -302,9 +302,9 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     this->gaussRandomBuffer = ippsMalloc_16s(this->frameBufferSize);
     this->uniformRandomBuffer = ippsMalloc_16s(this->frameBufferSize);
 
-    this->frameBuffer = ippsMalloc_16s(this->frameBufferSize);
-    ippsSet_16s(minIntensity, this->frameBuffer, this->frameBufferSize - this->frameBufferWidth);
-    ippsSet_16s(maxIntensity, &this->frameBuffer[this->frameBufferSize - this->frameBufferWidth], this->frameBufferWidth);
+    this->intensityBuffer = ippsMalloc_16s(this->frameBufferSize);
+    ippsSet_16s(minIntensity, this->intensityBuffer, this->frameBufferSize - this->frameBufferWidth);
+    ippsSet_16s(maxIntensity, &this->intensityBuffer[this->frameBufferSize - this->frameBufferWidth], this->frameBufferWidth);
 
     this->charFrameBufferSize = this->frameBufferSize * fixedCharacterLength + this->frameBufferHeight + 4;
     this->startCharFrameBuffer = ippsMalloc_8u(this->charFrameBufferSize);

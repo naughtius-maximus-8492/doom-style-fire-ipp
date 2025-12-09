@@ -32,7 +32,7 @@ private:
      int frameBufferWidth;
      int frameBufferHeight;
 
-     Ipp16s* frameBuffer;
+     Ipp16s* intensityBuffer;
 
      Ipp16s* gaussRandomBuffer;
      Ipp16s* uniformRandomBuffer;
