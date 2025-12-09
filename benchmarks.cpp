@@ -10,12 +10,7 @@ TEST_CASE("Benchmarks")
     for (const int width : widths)
     {
         int height = width * (16.0F / 9.0F);
-        doomASCIIFire* tempFire;
-
-        BENCHMARK("Class Constructor " + std::to_string(height) + "x" + std::to_string(width))
-        {
-            tempFire = new doomASCIIFire(width, height);
-        };
+        doomASCIIFire* tempFire = new doomASCIIFire(width, height);
 
         BENCHMARK("Decay Step " + std::to_string(height) + "x" + std::to_string(width))
         {

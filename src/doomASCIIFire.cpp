@@ -26,15 +26,15 @@ void doomASCIIFire::decayStep() const
         Ipp16s* rowBelow = &row[this->frameBufferWidth];
 
         // Offset copy and rotate end or start values to simulate flickering
-        std::normal_distribution normal_distribution(0.0, static_cast<double>(flicker));
-        int fireOffset = static_cast<int>(normal_distribution(rng));
+        std::uniform_int_distribution<> uniformDistribution(defaultFlicker * -1, defaultFlicker);
+        int fireOffset = uniformDistribution(rng);
 
         const unsigned int positiveFireOffset = std::abs(fireOffset);
         Ipp16s* offsetBuffer = ippsMalloc_16s(fireOffset);
 
         if (fireOffset == 0)
         {
-            fireOffset--;
+            ippsCopy_16s(rowBelow, row, this->frameBufferWidth);
         }
         if (fireOffset > 0)
         {
@@ -114,7 +114,7 @@ void doomASCIIFire::openConfig()
 #endif
 }
 
-void doomASCIIFire::updateDecayRate(bool increment)
+void doomASCIIFire::updateDecayRate(const bool increment)
 {
     if (increment)
     {
@@ -198,7 +198,7 @@ void doomASCIIFire::setCharacter(const int intensity, Ipp8u* frameBufPos, const 
     frameBufPos[position] = this->intensityToChar(intensity);
 }
 
-void doomASCIIFire::initConstantChars()
+void doomASCIIFire::initConstantChars() const
 {
 
     for (int i = 0; i < this->frameBufferSize; ++i)

@@ -17,7 +17,7 @@ constexpr int defaultMeanGauss = -5;
 constexpr unsigned int defaultDelay = 67;
 constexpr unsigned int fixedCharacterLength = 44;
 
-constexpr int defaultFlicker = 4;
+constexpr int defaultFlicker = 1;
 
 constexpr const char *defaultFlameGradient = " `'^x!|ioedO0&#";
 
@@ -45,7 +45,7 @@ private:
      void setRGBValues(int intensity, Ipp8u* frameBufPos) const;
      void setCharacter(int intensity, Ipp8u* frameBufPos, bool newline) const;
 
-     void initConstantChars();
+     void initConstantChars() const;
 
      static float normalise(float value, float min, float max);
 

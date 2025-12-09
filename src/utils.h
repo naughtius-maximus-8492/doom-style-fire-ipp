@@ -28,7 +28,7 @@ inline void calculateHeightWidth(int* height, int* width)
 
 // TODO Equivalent linux key detection
 
-inline void printFrameFast(char* frame, int length)
+inline void printFrameFast(Ipp8u* frame, int length)
 {
     write(STDOUT_FILENO, frame, length);
 }
