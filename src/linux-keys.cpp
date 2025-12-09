@@ -21,6 +21,7 @@ LT::LinuxKeyHandler::~LinuxKeyHandler(){
 
 
 void LT::LinuxKeyHandler::key_down_func(){
+#ifdef __linux__
     while(this->running){
         char ch[7];
         ssize_t size;
@@ -28,6 +29,7 @@ void LT::LinuxKeyHandler::key_down_func(){
         auto time_now = std::chrono::steady_clock::now();
         this->pressed_keys.emplace(decode_key(ch, size), time_now);
     }
+#endif
 }
 
 bool LT::LinuxKeyHandler::GetAsyncKeyState(const Key& key){

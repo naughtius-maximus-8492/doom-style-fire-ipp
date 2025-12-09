@@ -27,6 +27,7 @@ set(SOURCES
         src/linux-keys.cpp
         src/linux-keys.h
         src/linux-virtual-keys.h
+        src/keys.h
 )
 
 add_executable(doomAsciiFire

@@ -1,8 +1,32 @@
 #pragma once
-#include "linux-keys.h"
+#include <iostream>
 #ifdef WIN32
 #include "Windows.h"
+#else
+#include <sys/ioctl.h>
+#include <unistd.h>
+#include "linux-keys.h"
+#endif
 
+struct KeyHandler{
+        
+#ifdef WIN32
+        inline bool detect_key_press(const Key& key)
+        {
+            const char code = keyToVkCode(key);
+            return (GetAsyncKeyState(code) & 0x8000) != 0;
+        }
+#else
+        LT::LinuxKeyHandler handler;
+
+        inline bool detect_key_press(const Key& key)
+        {
+            return handler.GetAsyncKeyState(key);
+        }
+#endif
+};
+
+#ifdef WIN32
 inline void printFrameFast(const char* frame, const int length)
 {
     DWORD written;
@@ -17,29 +41,8 @@ inline void calculateHeightWidth(int* height, int* width)
     *width = csbi.dwSize.X;
     *height = csbi.dwSize.Y;
 }
-
 #else
-#include <sys/ioctl.h>
-#include <unistd.h>
-#include <iostream>
-#include "linux-virtual-keys.h"
 
-struct KeyHandler{
-        
-#ifdef WIN32
-        inline bool detect_key_press(const char code)
-        {
-            return (GetAsyncKeyState(code) & 0x8000) != 0;
-        }
-#else
-        LT::LinuxKeyHandler handler;
-
-        inline bool detect_key_press(const Key& key)
-        {
-            return handler.GetAsyncKeyState(key);
-        }
-#endif
-};
 
 inline void printFrameFast(char* frame, int length)
 {
@@ -60,7 +63,6 @@ inline void clearScreen()
 {
     std::cout << "\033[2J\033[H" << std::endl;
 }
-
 
 inline void toggle_cursor(bool hidden)
 {
