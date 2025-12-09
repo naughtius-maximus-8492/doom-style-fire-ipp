@@ -51,6 +51,18 @@ void doomASCIIFire::decayStep()
         // }
         // ippsFree(offsetBuffer);
 
+        // Add sparks if at around the 25% point
+        if (i / this->intensityBufferHeight > 0)
+        {
+            for (int x = 0; x < this->intensityBufferWidth; x++)
+            {
+                if (rand() % 1000 == 0)
+                {
+                    row[x] = maxIntensity;
+                }
+            }
+        }
+
 
         // Generate random distribution
         Ipp16s* uniformBufferPos = &this->uniformRandomBuffer[i * intensityBufferWidth];
@@ -64,12 +76,12 @@ void doomASCIIFire::decayStep()
 
         ippsThreshold_LT_16s_I(row, this->intensityBufferWidth, minIntensity);
 
-        ippsThreshold_GT_16s_I(row, this->intensityBufferWidth, maxIntensity);
+        // ippsThreshold_GT_16s_I(row, this->intensityBufferWidth, maxIntensity);
 
     });
 
 
-    // Update bottom row to have new flame sources
+    // Update bottom row to shift flame sources
     int fireOffset = randDistribution(rng);
 
     Ipp16s* row = &this->intensityBuffer[this->intensityBufferSize - this->intensityBufferWidth];
@@ -90,6 +102,7 @@ void doomASCIIFire::decayStep()
         ippsCopy_16s(offsetBuffer, &row[this->intensityBufferWidth - positiveFireOffset], positiveFireOffset);
     }
     ippsFree(offsetBuffer);
+
 
 }
 
@@ -370,7 +383,7 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     ippsRandUniform_16s(bottomRow, this->intensityBufferWidth, state);
     ippsAbs_16s_I(bottomRow, this->intensityBufferWidth);
     ippsAddC_16s_I(maxIntensity / 1.8, bottomRow, this->intensityBufferWidth);
-    ippsThreshold_GT_16s_I(bottomRow, this->intensityBufferWidth, maxIntensity * 1.1);
+    ippsThreshold_GT_16s_I(bottomRow, this->intensityBufferWidth, maxIntensity * 1);
 
     for (int i = 0; i < this->intensityBufferHeight; i++)
     {
