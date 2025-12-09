@@ -6,6 +6,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include "linux-keys.h"
+#include <ipp.h>
 #endif
 
 struct KeyHandler{
@@ -44,7 +45,7 @@ inline void calculateHeightWidth(int* height, int* width)
 #else
 
 
-inline void printFrameFast(char* frame, int length)
+inline void printFrameFast(const Ipp8u* frame, const int length)
 {
     write(STDOUT_FILENO, frame, length);
 }
