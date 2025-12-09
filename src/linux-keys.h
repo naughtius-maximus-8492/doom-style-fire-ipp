@@ -1,5 +1,6 @@
 #pragma once
 
+#include "linux-virtual-keys.h"
 #include <map>
 #include <thread>
 #include <unordered_set>
@@ -9,6 +10,7 @@
 #include <unistd.h>
 
 namespace LT {
+
     // Function to set terminal to raw mode
     inline void setRawMode(bool enable) {
         static struct termios oldt, newt;
@@ -24,17 +26,17 @@ namespace LT {
 
     class LinuxKeyHandler{
     private:
-        std::map<char, std::chrono::time_point<std::chrono::steady_clock>> pressed_keys;
-        bool running = false;
+        std::map<Key, std::chrono::time_point<std::chrono::steady_clock>> pressed_keys;
+        bool running = true;
         std::thread key_down_thread;
         void key_down_func();
 
-        const int delay = 100;
+        const int delay = 50;
 
     public:
         LinuxKeyHandler();
         ~LinuxKeyHandler();
-        bool GetAsyncKeyState(const char& key);
+        bool GetAsyncKeyState(const Key& key);
     };
 
 }

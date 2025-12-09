@@ -1,4 +1,8 @@
+#include "linux-keys.h"
+#include "oneapi/tbb/parallel_pipeline.h"
 #include <chrono>
+#include <cstdlib>
+#include <iostream>
 
 #ifdef WIN32
 #else
@@ -48,33 +52,33 @@ int main()
 
         printFrameFast(fire->charFrameBuffer);
 
-        if (keyHandler.detect_key_press('Q'))
+        if (keyHandler.detect_key_press(Key::q))
         {
             fire->openConfig();
             std::this_thread::sleep_for(std::chrono::milliseconds(150));
         }
-        if (keyHandler.detect_key_press(VK_UP))
+        if (keyHandler.detect_key_press(Key::UP))
         {
             fire->updateDecayRate(false);
         }
-        if (keyHandler.detect_key_press(VK_DOWN))
+        if (keyHandler.detect_key_press(Key::DOWN))
         {
             fire->updateDecayRate(true);
         }
-        if (keyHandler.detect_key_press('D'))
+        if (keyHandler.detect_key_press(Key::d))
         {
             fire->colour_band_multiplier -= 0.02;
         }
-        if (keyHandler.detect_key_press('A'))
+        if (keyHandler.detect_key_press(Key::a))
         {
             fire->colour_band_multiplier += 0.02;
         }
-        if (keyHandler.detect_key_press('F'))
+        if (keyHandler.detect_key_press(Key::f))
         {
             fire->backgroundMode =  !fire->backgroundMode;
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
-        if (keyHandler.detect_key_press('S'))
+        if (keyHandler.detect_key_press(Key::s))
         {
             fire->frameDelay++;
             if (fire->frameDelay >= 1000)
@@ -82,7 +86,7 @@ int main()
                 fire->frameDelay = 100;
             }
         }
-        if (keyHandler.detect_key_press('W'))
+        if (keyHandler.detect_key_press(Key::w))
         {
             fire->frameDelay--;
             if (fire->frameDelay <= 0)
@@ -90,7 +94,7 @@ int main()
                 fire->frameDelay = 0;
             }
         }
-        if (keyHandler.detect_key_press(VK_RIGHT))
+        if (keyHandler.detect_key_press(Key::RIGHT))
         {
             fire->flicker++;
             if (fire->flicker > width / 3)
@@ -98,7 +102,7 @@ int main()
                 fire->flicker = width / 3;
             }
         }
-        if (keyHandler.detect_key_press(VK_LEFT))
+        if (keyHandler.detect_key_press(Key::LEFT))
         {
             fire->flicker--;
             if (fire->flicker <= 0)
@@ -106,7 +110,7 @@ int main()
                 fire->flicker = 0;
             }
         }
-        if (keyHandler.detect_key_press(VK_ESCAPE))
+        if (keyHandler.detect_key_press(Key::ESC))
         {
             running = false;
         }
@@ -124,9 +128,6 @@ int main()
     }
 
     delete fire;
-
     clearScreen();
-
-    std::cout << "\033[?25h";  // show cursor
     return 0;
 }

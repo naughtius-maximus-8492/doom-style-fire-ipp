@@ -35,9 +35,9 @@ struct KeyHandler{
 #else
         LT::LinuxKeyHandler handler;
 
-        inline bool detect_key_press(const char code)
+        inline bool detect_key_press(const Key& key)
         {
-            return handler.GetAsyncKeyState(code);
+            return handler.GetAsyncKeyState(key);
         }
 #endif
 };
@@ -59,5 +59,5 @@ inline void calculateHeightWidth(int* height, int* width)
 // Universal compatibility
 inline void clearScreen()
 {
-    std::cout << "\033[2J\033[H";
+    std::cout << "\033[2J\033[H" << std::endl;
 }
