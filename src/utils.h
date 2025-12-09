@@ -1,5 +1,4 @@
 #ifdef WIN32
-define NOMINMAX
 #include "Windows.h"
 
 inline bool detect_key_press(const char code)

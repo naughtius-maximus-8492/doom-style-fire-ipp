@@ -1,5 +1,4 @@
 #include <chrono>
-#include <csignal>
 
 #ifdef WIN32
 #else
