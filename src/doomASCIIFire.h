@@ -21,9 +21,9 @@ constexpr int defaultMeanGauss = -5;
 constexpr unsigned int defaultDelay = 67;
 constexpr unsigned int fixedCharacterLength = 44;
 
-constexpr int defaultFlicker = 2;
+constexpr int defaultFlicker = 1;
 
-constexpr const char *defaultFlameGradient = " .:;+*%#";
+constexpr const char *defaultFlameGradient = " .:;+*%##";
 
 constexpr Ipp8u ansiiEscapeCodeNewline[] = "\033[38;2;000;000;000m\033[48;2;000;000;000m \033[0m\n";
 constexpr Ipp8u ansiiEscapeCode[] = "\033[038;2;000;000;000m\033[48;2;000;000;000m \033[0m";
@@ -63,6 +63,8 @@ private:
 
      // Perlin noise for base fire
      unsigned int perlinNoisePos;
+     siv::PerlinNoise::seed_type perlinSeed;
+     siv::PerlinNoise perlin;
 
 public:
      // Used for getting the entire frame buffer

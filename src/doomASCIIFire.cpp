@@ -13,6 +13,9 @@ void doomASCIIFire::initRandomFunctions()
     ippsRandGaussGetSize_16s(&gaussianSize);
     this->gaussianRandomState = reinterpret_cast<IppsRandGaussState_16s *>(ippsMalloc_16s(gaussianSize));
     ippsRandGaussInit_16s(this->gaussianRandomState, defaultMeanGauss, this->decayRate / 2, this->seededTime);
+
+    this->perlinSeed = this->seededTime;
+    this->perlinNoisePos = this->perlinSeed;
 }
 
 void doomASCIIFire::decayStep()
@@ -21,7 +24,6 @@ void doomASCIIFire::decayStep()
     tbb::parallel_for(static_cast<size_t>(0), static_cast<size_t>(this->intensityBufferHeight - 1), [&](const size_t i)
     {
         Ipp16s* row = &this->intensityBuffer[i * this->intensityBufferWidth];
-        Ipp16s* rowBelow = &row[this->intensityBufferWidth];
 
         // Offset copy and rotate end or start values to simulate flickering
         int fireOffset = randDistribution(rng);
@@ -31,57 +33,46 @@ void doomASCIIFire::decayStep()
             this->setWeightedMean(&row[x], fireOffset);
         }
 
+        // Generate gaussian distribution
+        Ipp16s* gaussBufferPos = &this->gaussRandomBuffer[i * intensityBufferWidth];
+        ippsRandGauss_16s(gaussBufferPos, this->intensityBufferWidth, this->gaussianRandomState);
+        ippsSub_16s_I(gaussBufferPos, row, this->intensityBufferWidth);
+
         // Generate random distribution
         Ipp16s* uniformBufferPos = &this->uniformRandomBuffer[i * intensityBufferWidth];
         ippsRandUniform_16s(uniformBufferPos, this->intensityBufferWidth, uniformRandomState);
         ippsSub_16s_I(uniformBufferPos, row, this->intensityBufferWidth);
 
-        // Generate gaussian distribution
-        Ipp16s* gaussBufferPos = &this->gaussRandomBuffer[i * intensityBufferWidth];
-        ippsRandGauss_16s(gaussBufferPos, this->intensityBufferWidth, this->gaussianRandomState);
-        ippsSub_16s_I(gaussBufferPos, row, this->intensityBufferWidth);
 
         ippsThreshold_LT_16s_I(row, this->intensityBufferWidth, minIntensity);
 
         ippsThreshold_GT_16s_I(row, this->intensityBufferWidth, maxIntensity);
     });
 
-
-    // // Update bottom row to shift flame sources
-    // int fireOffset = randDistribution(rng);
-    //
-    // Ipp16s* row = &this->intensityBuffer[this->intensityBufferSize - this->intensityBufferWidth];
-    // Ipp16s* rowBelow = &this->intensityBuffer[this->intensityBufferSize - this->intensityBufferWidth];
-    //
-    // Ipp16s* offsetBuffer = ippsMalloc_16s(fireOffset);
-    // const unsigned int positiveFireOffset = std::abs(fireOffset);
-    // if (fireOffset > 0)
-    // {
-    //     ippsCopy_16s(&rowBelow[this->intensityBufferWidth - positiveFireOffset], offsetBuffer, positiveFireOffset);
-    //     ippsCopy_16s(rowBelow, &row[positiveFireOffset], this->intensityBufferWidth - positiveFireOffset);
-    //     ippsCopy_16s(offsetBuffer, row, fireOffset);
-    // }
-    // else if (fireOffset < 0)
-    // {
-    //     ippsCopy_16s(rowBelow, offsetBuffer, positiveFireOffset);
-    //     ippsCopy_16s(&rowBelow[positiveFireOffset], row, this->intensityBufferWidth - positiveFireOffset);
-    //     ippsCopy_16s(offsetBuffer, &row[this->intensityBufferWidth - positiveFireOffset], positiveFireOffset);
-    // }
-    // ippsFree(offsetBuffer);
-
-    perlinNoisePos++;
-
+    perlinNoisePos += 1 + flicker;
 
     const siv::PerlinNoise::seed_type seed = 123456u;
     const siv::PerlinNoise perlin{ seed };
 
+    Ipp32f* tempBuffer = ippsMalloc_32f(this->intensityBufferWidth);
+
     Ipp16s* bottomRow = &this->intensityBuffer[this->intensityBufferSize - this->intensityBufferWidth];
     for (int x = 0 ; x < this->intensityBufferWidth ; ++x)
     {
-        Ipp16s value = perlin.octave2D_01((x * 0.05), (perlinNoisePos * 0.05), 4) * maxIntensity  / 1.2;
-        bottomRow[x] = value;
+        double value = perlin.octave2D_01((x * 0.04), (perlinNoisePos * 0.02), 4);
+
+        tempBuffer[x] = value;
     }
 
+    int minimumValue = maxIntensity / 1.5;
+
+    for (int i = 0; i < this->intensityBufferWidth; ++i)
+    {
+        tempBuffer[i] = minimumValue + tempBuffer[i] * (maxIntensity - minimumValue) * 1.5;
+    }
+
+    ippsConvert_32f16s_Sfs(tempBuffer, bottomRow, intensityBufferWidth, ippRndHintAccurate, 0);
+    ippsThreshold_GT_16s_I(bottomRow, intensityBufferWidth, maxIntensity);
 }
 
 void doomASCIIFire::openConfig(KeyHandler& handler)
@@ -250,7 +241,7 @@ void doomASCIIFire::setRGBValues(const int intensity, Ipp8u *frameBufPos) const
     // work out percentage to absolute zero
     const float percentage = static_cast<float>(intensity) / static_cast<float>(maxIntensity);
 
-    const float colourBandOne = 0.8 * this->colourBandMultiplier;
+    const float colourBandOne = 0.6 * this->colourBandMultiplier;
     const float colourBandTwo = 0.2 * this->colourBandMultiplier;
 
     if (percentage >= colourBandOne) // white to yellow
@@ -297,11 +288,13 @@ void doomASCIIFire::setWeightedMean(Ipp16s *frameBufPos, int offset) const
     Ipp16s left = frameBufPos[this->intensityBufferWidth - 1];
     Ipp16s right = frameBufPos[this->intensityBufferWidth + 1];
 
-    frameBufPos[offset] = (center * 2 + left + right) / 4;
+    Ipp32f mean = (center * 4 + left + right) / 6;
+
+    frameBufPos[offset] = mean;
 }
 
 doomASCIIFire::doomASCIIFire(const int width, const int height)
-    : decayRate { 50000 / height }
+    : decayRate { 80000 / height }
     , characters { defaultFlameGradient }
     , seededTime { time(nullptr) }
     , colourBandMultiplier { 1.0F }

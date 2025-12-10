@@ -14,7 +14,7 @@ TEST_CASE("Benchmarks")
 
         BENCHMARK("Decay Step " + std::to_string(height) + "x" + std::to_string(width))
         {
-            tempFire->newDecayStep();
+            tempFire->decayStep();
         };
 
         BENCHMARK("Get frame " + std::to_string(height) + "x" + std::to_string(width))
