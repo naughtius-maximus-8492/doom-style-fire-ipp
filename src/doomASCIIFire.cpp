@@ -52,13 +52,15 @@ void doomASCIIFire::decayStep()
         // ippsFree(offsetBuffer);
 
         // Add sparks if at around the 25% point
-        if (i / this->intensityBufferHeight > 0)
+        float percentage = static_cast<float>(i) / this->intensityBufferHeight;
+        if (percentage > 0.5 && percentage < 0.75)
         {
             for (int x = 0; x < this->intensityBufferWidth; x++)
             {
                 if (rand() % 1000 == 0)
                 {
                     row[x] = maxIntensity;
+                    row[x + 1] = maxIntensity;
                 }
             }
         }
