@@ -61,7 +61,7 @@ private:
      time_t seededTime;
      std::mt19937 rng;
      std::uniform_int_distribution<int> flickerRandomDistribution;
-     std::uniform_int_distribution<int> embersRandomDistribution;
+     std::uniform_int_distribution<int> embersChance;
 
      // used for internal calculation that don't want to in
      Ipp8u* offsetCharFrameBuffer;

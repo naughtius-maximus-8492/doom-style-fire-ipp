@@ -31,7 +31,7 @@ void doomASCIIFire::decayFrame()
         {
             for (int x = 0; x < this->intensityBufferWidth; ++x)
             {
-                if (embersRandomDistribution(rng) == 50)
+                if (embersChance(rng) == 50)
                 {
                     embersRow[x] = charRow[x];
                 }
@@ -325,14 +325,14 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     : decayRate { 80000 / height }
     , characters { defaultFlameGradient }
     , seededTime { time(nullptr) }
+    , rng { std::random_device{}() }
+    , flickerRandomDistribution(defaultFlicker * -1, defaultFlicker)
+    , embersChance(0, 300)
+    , perlinNoisePos( 0 )
     , colourBandMultiplier { 1.0F }
     , backgroundMode(false)
     , frameDelay { defaultDelay }
     , flicker { 4 }
-    , rng { std::random_device{}() }
-    , flickerRandomDistribution(defaultFlicker * -1, defaultFlicker)
-    , embersRandomDistribution(0, 200)
-    , perlinNoisePos( 0 )
 {
     if (decayRate < 1)
     {
