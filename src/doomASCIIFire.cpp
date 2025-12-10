@@ -66,8 +66,8 @@ void doomASCIIFire::decayFrame()
     ippsThreshold_GT_16s_I(this->charIntensityBuffer, this->intensityBufferSize, maxIntensity);
     ippsThreshold_LT_16s_I(this->charIntensityBuffer, this->intensityBufferSize, minIntensity);
 
-    // ippsThreshold_GT_16s_I(this->embersIntensityBuffer, this->intensityBufferSize, maxIntensity);
-    // ippsThreshold_LT_16s_I(this->embersIntensityBuffer, this->intensityBufferSize, minIntensity);
+    ippsThreshold_GT_16s_I(this->embersIntensityBuffer, this->intensityBufferSize, maxIntensity);
+    ippsThreshold_LT_16s_I(this->embersIntensityBuffer, this->intensityBufferSize, minIntensity);
 }
 
 void doomASCIIFire::openConfig(KeyHandler& handler)
@@ -303,21 +303,22 @@ void doomASCIIFire::decayStep(Ipp16s *row, bool useWeightedMean, int height)
         else
         {
             row[x + fireOffset] = row[x + this->intensityBufferWidth];
-            row[x + this->intensityBufferWidth] *= 0.9;
+            row[x + this->intensityBufferWidth] *= 0.94;
         }
     }
 
     // Generate gaussian distribution
-    Ipp16s* gaussBufferPos = &this->gaussRandomBuffer[height * intensityBufferWidth];
-    ippsRandGauss_16s(gaussBufferPos, this->intensityBufferWidth, this->gaussianRandomState);
     if (useWeightedMean)
+    {
+        Ipp16s* gaussBufferPos = &this->gaussRandomBuffer[height * intensityBufferWidth];
+        ippsRandGauss_16s(gaussBufferPos, this->intensityBufferWidth, this->gaussianRandomState);
         ippsSub_16s_I(gaussBufferPos, row, this->intensityBufferWidth);
 
-    // Generate random distribution
-    Ipp16s* uniformBufferPos = &this->uniformRandomBuffer[height * intensityBufferWidth];
-    ippsRandUniform_16s(uniformBufferPos, this->intensityBufferWidth, uniformRandomState);
-    if (useWeightedMean)
+        // Generate uniform distribution
+        Ipp16s* uniformBufferPos = &this->uniformRandomBuffer[height * intensityBufferWidth];
+        ippsRandUniform_16s(uniformBufferPos, this->intensityBufferWidth, uniformRandomState);
         ippsSub_16s_I(uniformBufferPos, row, this->intensityBufferWidth);
+    }
 }
 
 doomASCIIFire::doomASCIIFire(const int width, const int height)
@@ -330,7 +331,7 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     , flicker { 4 }
     , rng { std::random_device{}() }
     , flickerRandomDistribution(defaultFlicker * -1, defaultFlicker)
-    , embersRandomDistribution(0, 100)
+    , embersRandomDistribution(0, 200)
     , perlinNoisePos( 0 )
 {
     if (decayRate < 1)
@@ -376,10 +377,10 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     this->initRandomFunctions();
 
     // Fill intensity buffers
-    // for (int i = 0; i < this->intensityBufferHeight; i++)
-    // {
-    //     this->decayFrame();
-    // }
+    for (int i = 0; i < this->intensityBufferHeight; i++)
+    {
+        this->decayFrame();
+    }
 }
 
 doomASCIIFire::~doomASCIIFire()
