@@ -18,48 +18,38 @@ void doomASCIIFire::initRandomFunctions()
     this->perlinNoisePos = this->perlinSeed;
 }
 
-void doomASCIIFire::decayStep()
+void doomASCIIFire::decayFrame()
 {
     // copy frames upwards
     tbb::parallel_for(static_cast<size_t>(0), static_cast<size_t>(this->intensityBufferHeight - 1), [&](const size_t i)
     {
-        Ipp16s* row = &this->intensityBuffer[i * this->intensityBufferWidth];
+        Ipp16s* charRow = &this->charIntensityBuffer[i * this->intensityBufferWidth];
+        this->decayStep(charRow, true, i);
 
-        // Offset copy and rotate end or start values to simulate flickering
-        int fireOffset = randDistribution(rng);
-
-        for (int x = 0; x < this->intensityBufferWidth; x++)
+        Ipp16s* embersRow = &this->embersIntensityBuffer[i * this->intensityBufferWidth];
+        if (i / static_cast<float>(this->intensityBufferHeight) > 0.9)
         {
-            this->setWeightedMean(&row[x], fireOffset);
+            for (int x = 0; x < this->intensityBufferWidth; ++x)
+            {
+                if (embersRandomDistribution(rng) == 50)
+                {
+                    embersRow[x] = charRow[x];
+                }
+            }
         }
 
-        // Generate gaussian distribution
-        Ipp16s* gaussBufferPos = &this->gaussRandomBuffer[i * intensityBufferWidth];
-        ippsRandGauss_16s(gaussBufferPos, this->intensityBufferWidth, this->gaussianRandomState);
-        ippsSub_16s_I(gaussBufferPos, row, this->intensityBufferWidth);
+        this->decayStep(embersRow, false, i);
 
-        // Generate random distribution
-        Ipp16s* uniformBufferPos = &this->uniformRandomBuffer[i * intensityBufferWidth];
-        ippsRandUniform_16s(uniformBufferPos, this->intensityBufferWidth, uniformRandomState);
-        ippsSub_16s_I(uniformBufferPos, row, this->intensityBufferWidth);
-
-
-        ippsThreshold_LT_16s_I(row, this->intensityBufferWidth, minIntensity);
-
-        ippsThreshold_GT_16s_I(row, this->intensityBufferWidth, maxIntensity);
     });
 
     perlinNoisePos += 1 + flicker;
 
-    const siv::PerlinNoise::seed_type seed = 123456u;
-    const siv::PerlinNoise perlin{ seed };
-
     Ipp32f* tempBuffer = ippsMalloc_32f(this->intensityBufferWidth);
 
-    Ipp16s* bottomRow = &this->intensityBuffer[this->intensityBufferSize - this->intensityBufferWidth];
+    Ipp16s* bottomRow = &this->charIntensityBuffer[this->intensityBufferSize - this->intensityBufferWidth];
     for (int x = 0 ; x < this->intensityBufferWidth ; ++x)
     {
-        double value = perlin.octave2D_01((x * 0.04), (perlinNoisePos * 0.02), 4);
+        double value = this->perlin.octave2D_01((x * 0.04), (perlinNoisePos * 0.02), 4);
 
         tempBuffer[x] = value;
     }
@@ -72,7 +62,12 @@ void doomASCIIFire::decayStep()
     }
 
     ippsConvert_32f16s_Sfs(tempBuffer, bottomRow, intensityBufferWidth, ippRndHintAccurate, 0);
-    ippsThreshold_GT_16s_I(bottomRow, intensityBufferWidth, maxIntensity);
+
+    ippsThreshold_GT_16s_I(this->charIntensityBuffer, this->intensityBufferSize, maxIntensity);
+    ippsThreshold_LT_16s_I(this->charIntensityBuffer, this->intensityBufferSize, minIntensity);
+
+    // ippsThreshold_GT_16s_I(this->embersIntensityBuffer, this->intensityBufferSize, maxIntensity);
+    // ippsThreshold_LT_16s_I(this->embersIntensityBuffer, this->intensityBufferSize, minIntensity);
 }
 
 void doomASCIIFire::openConfig(KeyHandler& handler)
@@ -152,7 +147,7 @@ void doomASCIIFire::updateFrame() const
     {
             for (int i = range.begin(); i != range.end(); ++i)
             {
-                const short intensity = this->intensityBuffer[i];
+                const short intensity = this->charIntensityBuffer[i] + this->embersIntensityBuffer[i];
                 Ipp8u* frameBufPos = &this->offsetCharFrameBuffer[i * fixedCharacterLength];
 
                 bool newline = false;
@@ -293,6 +288,38 @@ void doomASCIIFire::setWeightedMean(Ipp16s *frameBufPos, int offset) const
     frameBufPos[offset] = mean;
 }
 
+void doomASCIIFire::decayStep(Ipp16s *row, bool useWeightedMean, int height)
+{
+    // Offset copy and rotate end or start values to simulate flickering
+    int fireOffset = flickerRandomDistribution(rng);
+
+    for (int x = 0; x < this->intensityBufferWidth; x++)
+    {
+        if (useWeightedMean)
+        {
+            this->setWeightedMean(&row[x], fireOffset);
+
+        }
+        else
+        {
+            row[x + fireOffset] = row[x + this->intensityBufferWidth];
+            row[x + this->intensityBufferWidth] *= 0.9;
+        }
+    }
+
+    // Generate gaussian distribution
+    Ipp16s* gaussBufferPos = &this->gaussRandomBuffer[height * intensityBufferWidth];
+    ippsRandGauss_16s(gaussBufferPos, this->intensityBufferWidth, this->gaussianRandomState);
+    if (useWeightedMean)
+        ippsSub_16s_I(gaussBufferPos, row, this->intensityBufferWidth);
+
+    // Generate random distribution
+    Ipp16s* uniformBufferPos = &this->uniformRandomBuffer[height * intensityBufferWidth];
+    ippsRandUniform_16s(uniformBufferPos, this->intensityBufferWidth, uniformRandomState);
+    if (useWeightedMean)
+        ippsSub_16s_I(uniformBufferPos, row, this->intensityBufferWidth);
+}
+
 doomASCIIFire::doomASCIIFire(const int width, const int height)
     : decayRate { 80000 / height }
     , characters { defaultFlameGradient }
@@ -302,7 +329,8 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     , frameDelay { defaultDelay }
     , flicker { 4 }
     , rng { std::random_device{}() }
-    , randDistribution(defaultFlicker * -1, defaultFlicker)
+    , flickerRandomDistribution(defaultFlicker * -1, defaultFlicker)
+    , embersRandomDistribution(0, 100)
     , perlinNoisePos( 0 )
 {
     if (decayRate < 1)
@@ -324,36 +352,34 @@ doomASCIIFire::doomASCIIFire(const int width, const int height)
     this->gaussRandomBuffer = ippsMalloc_16s(this->intensityBufferSize);
     this->uniformRandomBuffer = ippsMalloc_16s(this->intensityBufferSize);
 
-    this->intensityBuffer = ippsMalloc_16s(this->intensityBufferSize);
-    ippsSet_16s(minIntensity, this->intensityBuffer, this->intensityBufferSize - this->intensityBufferWidth);
+    this->charIntensityBuffer = ippsMalloc_16s(this->intensityBufferSize);
+    this->embersIntensityBuffer = ippsMalloc_16s(this->intensityBufferSize);
+
+    ippsSet_16s(minIntensity, charIntensityBuffer, this->intensityBufferSize);
+    ippsSet_16s(minIntensity, embersIntensityBuffer, this->intensityBufferSize);
 
     this->charFrameBufferSize = this->intensityBufferSize * fixedCharacterLength + this->intensityBufferHeight + 4;
     this->startCharFrameBuffer = ippsMalloc_8u(this->charFrameBufferSize);
+
+    // Initialise start of char frame buffers with ansii code to move cursor back to start
     this->startCharFrameBuffer[0] = '\033';
     this->startCharFrameBuffer[1] = '[';
     this->startCharFrameBuffer[2] = 'H';
+
+    // Null escape char at the end of frame buffer
     this->startCharFrameBuffer[this->charFrameBufferSize] = '\0';
+
+    // Functions should consider this to be the start point so ansii code at the start isn't overwritten
     this->offsetCharFrameBuffer = &this->startCharFrameBuffer[3];
 
     this->initConstantChars();
     this->initRandomFunctions();
 
-    // Generate sources on bottom
-    // int randStateSize {};
-    // ippsRandUniformGetSize_16s(&randStateSize);
-    // IppsRandUniState_16s* state = reinterpret_cast<IppsRandUniState_16s *>(ippsMalloc_8u(randStateSize));
-    // ippsRandUniformInit_16s(state, maxIntensity / 10, maxIntensity * 2, this->seededTime);
-    // ippsRandUniform_16s(bottomRow, this->intensityBufferWidth, state);
-    // ippsAbs_16s_I(bottomRow, this->intensityBufferWidth);
-    // ippsAddC_16s_I(maxIntensity / 1.8, bottomRow, this->intensityBufferWidth);
-
-
-
-
-    for (int i = 0; i < this->intensityBufferHeight; i++)
-    {
-        this->decayStep();
-    }
+    // Fill intensity buffers
+    // for (int i = 0; i < this->intensityBufferHeight; i++)
+    // {
+    //     this->decayFrame();
+    // }
 }
 
 doomASCIIFire::~doomASCIIFire()

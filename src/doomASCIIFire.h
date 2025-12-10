@@ -36,7 +36,8 @@ private:
      int intensityBufferWidth;
      int intensityBufferHeight;
 
-     Ipp16s* intensityBuffer;
+     Ipp16s* charIntensityBuffer;
+     Ipp16s* embersIntensityBuffer;
 
      Ipp16s* gaussRandomBuffer;
      Ipp16s* uniformRandomBuffer;
@@ -54,9 +55,13 @@ private:
      static float normalise(float value, float min, float max);
      void setWeightedMean(Ipp16s* frameBufPos, int offset) const;
 
+     void decayStep(Ipp16s* row, bool useWeightedMean, int height);
+
+
      time_t seededTime;
      std::mt19937 rng;
-     std::uniform_int_distribution<int> randDistribution;
+     std::uniform_int_distribution<int> flickerRandomDistribution;
+     std::uniform_int_distribution<int> embersRandomDistribution;
 
      // used for internal calculation that don't want to in
      Ipp8u* offsetCharFrameBuffer;
@@ -81,7 +86,7 @@ public:
 
      void updateFrame() const;
 
-     void decayStep();
+     void decayFrame();
 
      void openConfig(KeyHandler& handler);
 

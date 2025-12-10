@@ -33,7 +33,7 @@ int main()
     bool running = true;
     while (running)
     {
-        fire->decayStep();
+        fire->decayFrame();
         fire->updateFrame();
 
         std::string frame {};
