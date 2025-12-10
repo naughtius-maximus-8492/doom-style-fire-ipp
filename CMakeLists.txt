@@ -20,6 +20,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(Catch2)
 
+
 set(SOURCES
         src/doomASCIIFire.h
         src/doomASCIIFire.cpp
@@ -28,6 +29,10 @@ set(SOURCES
         src/linux-keys.h
         src/linux-virtual-keys.h
         src/keys.h
+)
+
+set(INCLUDES
+        external_libs/perlin-noise
 )
 
 add_executable(doomAsciiFire
@@ -49,4 +54,12 @@ target_link_libraries(benchmarks PRIVATE
         Catch2::Catch2WithMain
         TBB::tbb
         IPP::ipps
+)
+
+target_include_directories(benchmarks PRIVATE
+        ${INCLUDES}
+)
+
+target_include_directories(doomAsciiFire PRIVATE
+        ${INCLUDES}
 )

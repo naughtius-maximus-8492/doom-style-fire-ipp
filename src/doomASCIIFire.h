@@ -9,10 +9,11 @@
 #include "utils.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include "PerlinNoise.hpp"
 
 
-constexpr unsigned int minIntensity = 0;
-constexpr unsigned int maxIntensity = 16384;
+constexpr int minIntensity = 0;
+constexpr int maxIntensity = 16384;
 
 constexpr int defaultLowBoundUniform = 0;
 constexpr int defaultMeanGauss = -5;
@@ -20,9 +21,9 @@ constexpr int defaultMeanGauss = -5;
 constexpr unsigned int defaultDelay = 67;
 constexpr unsigned int fixedCharacterLength = 44;
 
-constexpr int defaultFlicker = 3;
+constexpr int defaultFlicker = 2;
 
-constexpr const char *defaultFlameGradient = " .ixo#";
+constexpr const char *defaultFlameGradient = " .:;+*%#";
 
 constexpr Ipp8u ansiiEscapeCodeNewline[] = "\033[38;2;000;000;000m\033[48;2;000;000;000m \033[0m\n";
 constexpr Ipp8u ansiiEscapeCode[] = "\033[038;2;000;000;000m\033[48;2;000;000;000m \033[0m";
@@ -60,6 +61,8 @@ private:
      // used for internal calculation that don't want to in
      Ipp8u* offsetCharFrameBuffer;
 
+     // Perlin noise for base fire
+     unsigned int perlinNoisePos;
 
 public:
      // Used for getting the entire frame buffer
@@ -81,4 +84,6 @@ public:
      void openConfig(KeyHandler& handler);
 
      void updateDecayRate(bool increment);
+
+
 };
