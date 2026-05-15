@@ -9,7 +9,7 @@ Build
 `./build-linux.sh <clean>`
 
 ### Caching
-**NOTE: Set the CPM_SOURCE_CACHE environment variable to cache cloned repositories outside of the project**
+**NOTE: Optionally set the CPM_SOURCE_CACHE environment variable to cache cloned repositories outside of the project. If the build/ folder gets deleted, CPM only needs to recompile external libs rather than clone and recompile**
 
 **Bash**
 
