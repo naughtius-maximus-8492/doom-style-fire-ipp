@@ -7,6 +7,14 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
+# cmake target that cleans CMAKE_BINARY_DIR and prevents FetchContent packages from
+# being recompiled by preserving _deps
+add_custom_target(clean_preserve-deps
+    COMMAND find . -maxdepth 1 ! -name '_deps' ! -name '.' -exec rm -rf {} +
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    COMMENT "Cleaning CMAKE_BINARY_DIR but preserving _deps"
+)
+
 find_package(TBB REQUIRED)
 find_package(IPP REQUIRED)
 
