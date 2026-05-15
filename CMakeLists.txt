@@ -12,16 +12,6 @@ find_package(IPP REQUIRED)
 
 include(external_libs/CPM.cmake)
 CPMAddPackage(gh:catchorg/Catch2@3.15.0)
-#include(FetchContent)
-#
-#FetchContent_Declare(
-#        Catch2
-#        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-#        GIT_TAG        v3.11.0
-#)
-#
-#FetchContent_MakeAvailable(Catch2)
-
 
 set(SOURCES
         src/doomASCIIFire.h
