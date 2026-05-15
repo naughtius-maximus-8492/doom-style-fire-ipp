@@ -7,19 +7,20 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
+# cmake target that cleans CMAKE_BINARY_DIR and prevents FetchContent packages from
+# being recompiled by preserving _deps
+add_custom_target(clean_preserve-deps
+    COMMAND find . -maxdepth 1 ! -name '_deps' ! -name '.' -exec rm -rf {} +
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    COMMENT "Cleaning CMAKE_BINARY_DIR but preserving _deps"
+)
+
 find_package(TBB REQUIRED)
 find_package(IPP REQUIRED)
 
-include(FetchContent)
-
-FetchContent_Declare(
-        Catch2
-        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-        GIT_TAG        v3.11.0
-)
-
-FetchContent_MakeAvailable(Catch2)
-
+# Add Catch2
+include(cmake/CPM.cmake)
+CPMAddPackage(gh:catchorg/Catch2@3.15.0)
 
 set(SOURCES
         src/doomASCIIFire.h

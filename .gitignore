@@ -2,3 +2,4 @@
 build-windows/
 build-linux/
 cmake-build-*
+build/
