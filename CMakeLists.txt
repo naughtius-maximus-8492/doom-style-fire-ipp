@@ -10,7 +10,7 @@ endif()
 find_package(TBB REQUIRED)
 find_package(IPP REQUIRED)
 
-include(external_libs/CPM.cmake)
+include(cmake/CPM.cmake)
 CPMAddPackage(gh:catchorg/Catch2@3.15.0)
 
 set(SOURCES
