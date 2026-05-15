@@ -18,6 +18,7 @@ add_custom_target(clean_preserve-deps
 find_package(TBB REQUIRED)
 find_package(IPP REQUIRED)
 
+# Add Catch2
 include(cmake/CPM.cmake)
 CPMAddPackage(gh:catchorg/Catch2@3.15.0)
 
