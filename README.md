@@ -9,8 +9,11 @@ Build
 `./build-linux.sh <clean>`
 
 ### Caching
-NOTE: Set the CPM_SOURCE_CACHE environment variable to cache cloned repositories outside of the project
+**NOTE: Set the CPM_SOURCE_CACHE environment variable to cache cloned repositories outside of the project**
+
 **Bash**
+
 Run this command in the terminal or put into your .bashrc and source it again.
+
 `export CPM_SOURCE_CACHE=~/.cache/cpm/`
 
