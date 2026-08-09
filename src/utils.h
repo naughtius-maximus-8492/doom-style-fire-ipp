@@ -1,5 +1,7 @@
 #pragma once
 #include <iostream>
+
+#include "keys.h"
 #ifdef WIN32
 #include "Windows.h"
 #include "keys.h"
@@ -7,7 +9,6 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include "linux-keys.h"
-#include <ipp.h>
 #endif
 
 struct KeyHandler{
@@ -24,12 +25,14 @@ struct KeyHandler{
         inline bool detect_key_press(const Key& key)
         {
             return handler.GetAsyncKeyState(key);
+
+
         }
 #endif
 };
 
 #ifdef WIN32
-inline void printFrameFast(const Ipp8u* frame, const int length)
+inline void printFrameFast(const uint8_t* frame, const int length)
 {
     DWORD written;
     WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), frame, length, &written, nullptr);
@@ -46,7 +49,7 @@ inline void calculateHeightWidth(int* height, int* width)
 #else
 
 
-inline void printFrameFast(const Ipp8u* frame, const int length)
+inline void printFrameFast(const uint8_t* frame, const int length)
 {
     write(STDOUT_FILENO, frame, length);
 }

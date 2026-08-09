@@ -1,6 +1,5 @@
 #pragma once
 
-#include <ipp.h>
 #include <tbb/tbb.h>
 #include <string>
 #include <thread>
@@ -25,8 +24,8 @@ constexpr int defaultFlicker = 1;
 
 constexpr const char *defaultFlameGradient = " .:;+*%##";
 
-constexpr Ipp8u ansiiEscapeCodeNewline[] = "\033[38;2;000;000;000m\033[48;2;000;000;000m \033[0m\n";
-constexpr Ipp8u ansiiEscapeCode[] = "\033[038;2;000;000;000m\033[48;2;000;000;000m \033[0m";
+constexpr uint8_t ansiiEscapeCodeNewline[] = "\033[38;2;000;000;000m\033[48;2;000;000;000m \033[0m\n";
+constexpr uint8_t ansiiEscapeCode[] = "\033[038;2;000;000;000m\033[48;2;000;000;000m \033[0m";
 
 class doomASCIIFire
 {
@@ -36,26 +35,26 @@ private:
      int intensityBufferWidth;
      int intensityBufferHeight;
 
-     Ipp16s* charIntensityBuffer;
-     Ipp16s* embersIntensityBuffer;
+     float* charIntensityBuffer;
+     short* embersIntensityBuffer;
 
-     Ipp16s* gaussRandomBuffer;
-     Ipp16s* uniformRandomBuffer;
+     short* gaussRandomBuffer;
+     short* uniformRandomBuffer;
      IppsRandUniState_16s* uniformRandomState;
      IppsRandGaussState_16s* gaussianRandomState;
 
      void initRandomFunctions();
 
      char intensityToChar(int intensity) const;
-     void setRGBValues(int intensity, Ipp8u* frameBufPos) const;
-     void setCharacter(int intensity, Ipp8u* frameBufPos, bool newline) const;
+     void setRGBValues(int intensity, uint8_t* frameBufPos) const;
+     void setCharacter(int intensity, uint8_t* frameBufPos, bool newline) const;
 
      void initConstantChars() const;
 
      static float normalise(float value, float min, float max);
-     void setWeightedMean(Ipp16s* frameBufPos, int offset) const;
+     void setWeightedMean(short* frameBufPos, int offset) const;
 
-     void decayStep(Ipp16s* row, bool useWeightedMean, int height);
+     void decayStep(short* row, bool useWeightedMean, int height);
 
 
      time_t seededTime;
@@ -64,7 +63,7 @@ private:
      std::uniform_int_distribution<int> embersChance;
 
      // used for internal calculation that don't want to in
-     Ipp8u* offsetCharFrameBuffer;
+     uint8_t* offsetCharFrameBuffer;
 
      // Perlin noise for base fire
      unsigned int perlinNoisePos;
@@ -73,7 +72,7 @@ private:
 
 public:
      // Used for getting the entire frame buffer
-     Ipp8u* startCharFrameBuffer;
+     uint8_t* startCharFrameBuffer;
      int charFrameBufferSize;
      int intensityBufferSize;
      float colourBandMultiplier;

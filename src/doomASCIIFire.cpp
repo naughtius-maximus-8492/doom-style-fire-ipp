@@ -23,10 +23,10 @@ void doomASCIIFire::decayFrame()
     // copy frames upwards
     tbb::parallel_for(static_cast<size_t>(0), static_cast<size_t>(this->intensityBufferHeight - 1), [&](const size_t i)
     {
-        Ipp16s* charRow = &this->charIntensityBuffer[i * this->intensityBufferWidth];
+        short* charRow = &this->charIntensityBuffer[i * this->intensityBufferWidth];
         this->decayStep(charRow, true, i);
 
-        Ipp16s* embersRow = &this->embersIntensityBuffer[i * this->intensityBufferWidth];
+        short* embersRow = &this->embersIntensityBuffer[i * this->intensityBufferWidth];
         if (i / static_cast<float>(this->intensityBufferHeight) > 0.9)
         {
             for (int x = 0; x < this->intensityBufferWidth; ++x)
@@ -44,9 +44,9 @@ void doomASCIIFire::decayFrame()
 
     perlinNoisePos += 1 + flicker;
 
-    Ipp32f* tempBuffer = ippsMalloc_32f(this->intensityBufferWidth);
+    float* tempBuffer = ippsMalloc_32f(this->intensityBufferWidth);
 
-    Ipp16s* bottomRow = &this->charIntensityBuffer[this->intensityBufferSize - this->intensityBufferWidth];
+    short* bottomRow = &this->charIntensityBuffer[this->intensityBufferSize - this->intensityBufferWidth];
     for (int x = 0 ; x < this->intensityBufferWidth ; ++x)
     {
         double value = this->perlin.octave2D_01((x * 0.04), (perlinNoisePos * 0.02), 4);
@@ -148,7 +148,7 @@ void doomASCIIFire::updateFrame() const
             for (int i = range.begin(); i != range.end(); ++i)
             {
                 const short intensity = this->charIntensityBuffer[i] + this->embersIntensityBuffer[i];
-                Ipp8u* frameBufPos = &this->offsetCharFrameBuffer[i * fixedCharacterLength];
+                uint8_t* frameBufPos = &this->offsetCharFrameBuffer[i * fixedCharacterLength];
 
                 bool newline = false;
                 if (i % this->intensityBufferWidth == 0)
@@ -162,7 +162,7 @@ void doomASCIIFire::updateFrame() const
     );
 }
 
-void doomASCIIFire::setCharacter(const int intensity, Ipp8u* frameBufPos, const bool newline) const
+void doomASCIIFire::setCharacter(const int intensity, uint8_t* frameBufPos, const bool newline) const
 {
     int position = 8;
 
@@ -206,7 +206,7 @@ void doomASCIIFire::initConstantChars() const
 
     for (int i = 0; i < this->intensityBufferSize; ++i)
     {
-        Ipp8u* frameBufPos = &this->offsetCharFrameBuffer[i * fixedCharacterLength];
+        uint8_t* frameBufPos = &this->offsetCharFrameBuffer[i * fixedCharacterLength];
 
         if (i % this->intensityBufferWidth == 0)
         {
@@ -227,7 +227,7 @@ char doomASCIIFire::intensityToChar(const int intensity) const
     return this->characters[index];
 }
 
-void doomASCIIFire::setRGBValues(const int intensity, Ipp8u *frameBufPos) const
+void doomASCIIFire::setRGBValues(const int intensity, uint8_t *frameBufPos) const
 {
     constexpr int maxColourVal = 254;
 
@@ -277,18 +277,18 @@ float doomASCIIFire::normalise(const float value, const float min, const float m
     return std::clamp(normalised, 0.0F, 1.0F);
 }
 
-void doomASCIIFire::setWeightedMean(Ipp16s *frameBufPos, int offset) const
+void doomASCIIFire::setWeightedMean(short *frameBufPos, int offset) const
 {
-    Ipp16s center = frameBufPos[this->intensityBufferWidth];
-    Ipp16s left = frameBufPos[this->intensityBufferWidth - 1];
-    Ipp16s right = frameBufPos[this->intensityBufferWidth + 1];
+    short center = frameBufPos[this->intensityBufferWidth];
+    short left = frameBufPos[this->intensityBufferWidth - 1];
+    short right = frameBufPos[this->intensityBufferWidth + 1];
 
-    Ipp32f mean = (center * 4 + left + right) / 6;
+    float mean = (center * 4 + left + right) / 6;
 
     frameBufPos[offset] = mean;
 }
 
-void doomASCIIFire::decayStep(Ipp16s *row, bool useWeightedMean, int height)
+void doomASCIIFire::decayStep(short *row, bool useWeightedMean, int height)
 {
     // Offset copy and rotate end or start values to simulate flickering
     int fireOffset = flickerRandomDistribution(rng);
@@ -310,12 +310,12 @@ void doomASCIIFire::decayStep(Ipp16s *row, bool useWeightedMean, int height)
     // Generate gaussian distribution
     if (useWeightedMean)
     {
-        Ipp16s* gaussBufferPos = &this->gaussRandomBuffer[height * intensityBufferWidth];
+        short* gaussBufferPos = &this->gaussRandomBuffer[height * intensityBufferWidth];
         ippsRandGauss_16s(gaussBufferPos, this->intensityBufferWidth, this->gaussianRandomState);
         ippsSub_16s_I(gaussBufferPos, row, this->intensityBufferWidth);
 
         // Generate uniform distribution
-        Ipp16s* uniformBufferPos = &this->uniformRandomBuffer[height * intensityBufferWidth];
+        short* uniformBufferPos = &this->uniformRandomBuffer[height * intensityBufferWidth];
         ippsRandUniform_16s(uniformBufferPos, this->intensityBufferWidth, uniformRandomState);
         ippsSub_16s_I(uniformBufferPos, row, this->intensityBufferWidth);
     }

@@ -8,7 +8,6 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 find_package(TBB REQUIRED)
-find_package(IPP REQUIRED)
 
 include(FetchContent)
 
@@ -47,13 +46,11 @@ add_executable(benchmarks
 
 target_link_libraries(doomAsciiFire PRIVATE
         TBB::tbb
-        IPP::ipps
 )
 
 target_link_libraries(benchmarks PRIVATE
         Catch2::Catch2WithMain
         TBB::tbb
-        IPP::ipps
 )
 
 target_include_directories(benchmarks PRIVATE
